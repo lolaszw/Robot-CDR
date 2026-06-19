@@ -1,123 +1,196 @@
+enum estados { apagado,
+               espera,
+               piso,
+               ataque };
+estados estadoActual = apagado;
+//----------------------------------------------------------------------------------------------------------------------
+//botones
+#define swInicio 11
+#define swEstrategia 12
+
+//LEDs
+#define ledVerde 10
+#define ledRojo A2
 
 //----------------------------------------------------------------------------------------------------------------------
-//ultra1:
+//ultraSonicos:
 #define ECHO_1 3
 #define TRIG_1 2
-//ultra2:
-#define ECHO_2 5
-#define TRIG_2 4
-//ultra3:
-#define ECHO_3 7
-#define TRIG_3 6
-//CNY
-#define CNY_1 A7
-#define CNY_2 A6
-//motores 
-#define motorDER_1 8
-#define motorDER_2 7
-#define motorIZQ_1 3
-#define motorIZQ_2 2
+
+#define ECHO_2 4
+#define TRIG_2 13
+
+#define ECHO_3 A1
+#define TRIG_3 A0
+
+//CNYs
+#define cnyDer A5
+#define cnyIzq A6
+
 //----------------------------------------------------------------------------------------------------------------------
+//motores
+#define motorDER_1 2
+#define motorDER_2 5
+#define motorIZQ_1 6
+#define motorIZQ_2 7
+
+//pwm
+#define pwmDer 3
+#define pwmIzq 9
+//----------------------------------------------------------------------------------------------------------------------
+//parametros
+int minDistancia = 150 int esperaInicio = 5000 unsigned long ti = 0;
+//variables
+int distDer = 0;
+int distCen = 0;
+int distIzq = 0;
 
 
 void setup() {
- //ultra 1
+  //ultraSonicos
   pinMode(ECHO_1, INPUT);
   pinMode(TRIG_1, OUTPUT);
 
-//ultra 2
   pinMode(ECHO_2, INPUT);
   pinMode(TRIG_2, OUTPUT);
 
-//ultra 3
   pinMode(ECHO_3, INPUT);
   pinMode(TRIG_3, OUTPUT);
 
-//motores 
+  //motores
   pinMode(motorDer_1, OUTPUT);
   pinMode(motorDer_2, OUTPUT);
   pinMode(motorIzq_1, OUTPUT);
   pinMode(motorIzq_2, OUTPUT);
 
-//generales 
-pinMode()
-  Serial.begin(9600);
+  //botones
+  pinMode(swInicio, INPUT_PULLUP);
+  pinMode(swEstrategia, INPUT_PULLUP);
+
+  //LEDs
+  pinMode(ledVerde, OUTPUT);
+  pinMode(ledRojo, OUTPUT);
 }
 
 void loop() {
-  /*valorSenCNY = senCNY(senCNY1);
-  Serial.println(valorSenCNY);*/
-  //medirDistancia(TRIG_1,ECHO_1);
+  switch (estadoActual) {
+    case apagado:
+      {
+        detenerMotores();
 
-//---------------------------------------------------------------------------------
-  //ultrasonico 1
-  digitalWrite(TRIG_1, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(TRIG_1, LOW);
-  int tiempo_1 = pulseIn(ECHO_1, HIGH);
-  //delay(100);
-  int distancia_1 = tiempo_1 / 59;
-  if (distancia_1 > 0) {
-    Serial.print("\t\tsensor 1: ");
-    Serial.print(distancia_1);
-  }
-  //---------------------------------------------------------------------------------
-  //ultrasonico 2
-  digitalWrite(TRIG_2, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(TRIG_2, LOW);
-  int tiempo_2 = pulseIn(ECHO_2, HIGH);
-  //delay(100);
-  int distancia_2 = tiempo_2 / 59;
-  if (distancia_2 > 0) {
-    Serial.print("\t\tsensor 2: ");
-    Serial.print(distancia_2);
-  }
-//------------------------------------------------------------------------------------
-  //ultrasonico 3
-  digitalWrite(TRIG_3, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(TRIG_3, LOW);
-  int tiempo_3 = pulseIn(ECHO_3, HIGH);
-  //delay(100);
-  int distancia_3 = tiempo_3 / 59;
-  Serial.print("\t\tsensor 3: ");
-  Serial.println(distancia_3);
+        if (digitalRead(swInicio) == LOW) {  //si se presiona el boton empieza a esperar
+          estadoActual = espera;
+          ti = millis();
+        }
+        break;
+      }
+    case espera:
+      {
+        detenerMotores();
+        if (intervalo(ti, esperaInicio) = 1) {  // se fija si pasaron 5 seg
+          estadoActual = piso;
+        }
+        break;
+      }
+    case piso:
+      {
+        digitalWrite(ledVerde, HIGH);
 
-//-------------------------------------------------------------------------------------
-  //cny
-  int lecturaCNY_1 = analogRead(CNY_1);
-  Serial.println(lecturaCNY_1);
+        if (analogRead(cnyDer) > 0 && analogRead(cnyIzq) > 0) {  //si el piso lee negro pasa a ver si hay enemigos
+          estadoActual = ataque;
+        } else if (analogRead(cnyDer) > 0 && analogRead(cnyIzq) < 1) {  //si el lado izquierdo ve blanco, gira
+          irAtras();
+          irIzquierda();
+        } else if (analogRead(cnyDer) < 1 && analogRead(cnyIzq) > 0) {  //si el lado derecho ve blanco, gira
+          irAtras();
+          irDerecha();
+        } else {  //si lee blanco completamente
+          irAtras();
+        }
+        break;
+      }
+    case ataque:
+      {
+        digitalWrite(ledVerde, HIGH);
+        distDer = medirDistancia(ECHO_1, TRIG_1);
+        distCen = medirDistancia(ECHO_2, TRIG_2);
+        distIzq = medirDistancia(ECHO_3, TRIG_3);
+        atacarEnemigo();
+        if (senCNY(cnyDer) < 1 || senCNY(cnyIzq) < 1) {
+          estadoActual = piso;
+        }
+      }
+  }
 }
 
-
-/*int senCNY(int a){
-  int valorSenCNY = analogRead(a);
+void atacarEnemigo() {  //
+  if (medirDistancia(distCen) < minimo) {
+    irAdelante();
+    break;
+  }
+  if (medirDistancia(distDer)) {
+    irDerecha();
+    break;
+  }
+  if (medirDistancia(distIzq)) {
+    irIzquierda();
+    break;
+  }
+}
+int senCNY(int a) {
+  bool valorSenCNY = map(analogRead(a), 0, 1023, 0, 1);
   return valorSenCNY;
-}*/
+}
 
-/*void medirDistancia(int a, int b){
+void irDerecha() {  //gira a la derecha
+  digitalWrite(motorDER_1, HIGH);
+  digitalWrite(motorDER_2, LOW);
+  digitalWrite(motorIZQ_1, HIGH);
+  digitalWrite(motorIZQ_2, LOW);
+}
+
+void irIzquierda() {  //gira a la izquierda
+  digitalWrite(motorDER_1, LOW);
+  digitalWrite(motorDER_2, HIGH);
+  digitalWrite(motorIZQ_1, LOW);
+  digitalWrite(motorIZQ_2, HIGH);
+}
+
+void irAdelante() {  //va adelante
+  digitalWrite(motorDER_1, HIGH);
+  digitalWrite(motorDER_2, LOW);
+  digitalWrite(motorIZQ_1, LOW);
+  digitalWrite(motorIZQ_2, HIGH);
+}
+
+void irAtras() {  //va atras
+  digitalWrite(motorDER_1, LOW);
+  digitalWrite(motorDER_2, HIGH);
+  digitalWrite(motorIZQ_1, HIGH);
+  digitalWrite(motorIZQ_2, LOW);
+}
+
+void detenerMotores() {  //motores detenidos
+  digitalWrite(motorDER_1, LOW);
+  digitalWrite(motorDER_2, LOW);
+  digitalWrite(motorIZQ_1, LOW);
+  digitalWrite(motorIZQ_2, LOW);
+}
+
+float medirDistancia(int a, int b) {  //para medir la distancia
   digitalWrite(a, HIGH);
   delayMicroseconds(10);
   digitalWrite(a, LOW);
-  int tiempo = pulseIn(b, HIGH);
+  int tiempo = pulseIn(b, HIGH, 30000);
   //delay(100);
-  int distancia = tiempo / 59;
-  Serial.println(distancia);
-}*/
-
-void irDerecha(){
-  digitalWrite();
+  return tiempo / 59;
 }
 
-void irIzquierda(){
-}
+bool intervalo(long tiempoi, int t) {  //para ver si x intervalo se cumplio o no
 
-void irAdelante(){
-}
-
-void irAtras (){
-}
- 
-void detenerMotores(){
+  if (millis() >= tiempoi + t) {
+    return true;
+  } else {
+    return false;
+  }
 }
