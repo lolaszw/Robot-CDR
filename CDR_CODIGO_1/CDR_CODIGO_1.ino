@@ -39,7 +39,10 @@ estados estadoActual = apagado;
 #define pwmIzq 9
 //----------------------------------------------------------------------------------------------------------------------
 //parametros
-int minDistancia = 150 int esperaInicio = 5000 unsigned long ti = 0;
+const int minDistancia = 150 ;
+const int esperaInicio = 5000 ;
+unsigned long ti = 0;
+const int buscaEspera = 3000;
 //variables
 int distDer = 0;
 int distCen = 0;
@@ -58,10 +61,10 @@ void setup() {
   pinMode(TRIG_3, OUTPUT);
 
   //motores
-  pinMode(motorDer_1, OUTPUT);
-  pinMode(motorDer_2, OUTPUT);
-  pinMode(motorIzq_1, OUTPUT);
-  pinMode(motorIzq_2, OUTPUT);
+  pinMode(motorDER_1, OUTPUT);
+  pinMode(motorDER_2, OUTPUT);
+  pinMode(motorIZQ_1, OUTPUT);
+  pinMode(motorIZQ_2, OUTPUT);
 
   //botones
   pinMode(swInicio, INPUT_PULLUP);
@@ -87,7 +90,7 @@ void loop() {
     case espera:
       {
         detenerMotores();
-        if (intervalo(ti, esperaInicio) = 1) {  // se fija si pasaron 5 seg
+        if (intervalo(ti, esperaInicio)) {  // se fija si pasaron 5 seg
           estadoActual = piso;
         }
         break;
@@ -115,28 +118,32 @@ void loop() {
         distDer = medirDistancia(ECHO_1, TRIG_1);
         distCen = medirDistancia(ECHO_2, TRIG_2);
         distIzq = medirDistancia(ECHO_3, TRIG_3);
+        ti = millis();
+        irDerecha();
+        intervalo(ti, buscaEspera);
         atacarEnemigo();
         if (senCNY(cnyDer) < 1 || senCNY(cnyIzq) < 1) {
           estadoActual = piso;
         }
+        break;
       }
   }
 }
 
+
+
 void atacarEnemigo() {  //
-  if (medirDistancia(distCen) < minimo) {
+  if (distCen < minDistancia) {
     irAdelante();
-    break;
   }
-  if (medirDistancia(distDer)) {
+  if (distDer < minDistancia) {
     irDerecha();
-    break;
   }
-  if (medirDistancia(distIzq)) {
+  if (distIzq < minDistancia) {
     irIzquierda();
-    break;
   }
 }
+
 int senCNY(int a) {
   bool valorSenCNY = map(analogRead(a), 0, 1023, 0, 1);
   return valorSenCNY;
