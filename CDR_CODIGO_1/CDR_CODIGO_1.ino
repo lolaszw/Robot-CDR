@@ -39,8 +39,8 @@ estados estadoActual = apagado;
 #define pwmIzq 9
 //----------------------------------------------------------------------------------------------------------------------
 //parametros
-const int minDistancia = 150 ;
-const int esperaInicio = 5000 ;
+const int minDistancia = 150;
+const int esperaInicio = 5000;
 unsigned long ti = 0;
 const int buscaEspera = 3000;
 //variables
@@ -98,17 +98,20 @@ void loop() {
     case piso:
       {
         digitalWrite(ledVerde, HIGH);
-
-        if (analogRead(cnyDer) > 0 && analogRead(cnyIzq) > 0) {  //si el piso lee negro pasa a ver si hay enemigos
-          estadoActual = ataque;
-        } else if (analogRead(cnyDer) > 0 && analogRead(cnyIzq) < 1) {  //si el lado izquierdo ve blanco, gira
-          irAtras();
-          irIzquierda();
-        } else if (analogRead(cnyDer) < 1 && analogRead(cnyIzq) > 0) {  //si el lado derecho ve blanco, gira
-          irAtras();
-          irDerecha();
-        } else {  //si lee blanco completamente
-          irAtras();
+        ti = millis();
+        irDerecha();
+        if (intervalo(ti, 2000)) {
+          if (analogRead(cnyDer) > 0 && analogRead(cnyIzq) > 0) {  //si el piso lee negro pasa a ver si hay enemigos
+            estadoActual = ataque;
+          } else if (analogRead(cnyDer) > 0 && analogRead(cnyIzq) < 1) {  //si el lado izquierdo ve blanco, gira
+            irAtras();
+            irIzquierda();
+          } else if (analogRead(cnyDer) < 1 && analogRead(cnyIzq) > 0) {  //si el lado derecho ve blanco, gira
+            irAtras();
+            irDerecha();
+          } else {  //si lee blanco completamente
+            irAtras();
+          }
         }
         break;
       }
