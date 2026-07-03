@@ -1,8 +1,9 @@
-enum estados { apagado,
-               espera,
-               piso,
-               ataque };
-estados estadoActual = apagado;
+enum estados { APAGADO,
+               ESPERA,
+               INICIO,  //USAR MAYÚSCULAS
+               PISO,
+               ATAQUE };
+estados estadoActual = APAGADO;
 //----------------------------------------------------------------------------------------------------------------------
 //botones
 #define swInicio 11
@@ -14,10 +15,10 @@ estados estadoActual = apagado;
 
 //----------------------------------------------------------------------------------------------------------------------
 //ultraSonicos:
-#define ECHO_1 3
-#define TRIG_1 2
+#define ECHO_1 A3
+#define TRIG_1 A4
 
-#define ECHO_2 4
+#define ECHO_2 8
 #define TRIG_2 13
 
 #define ECHO_3 A1
@@ -29,11 +30,12 @@ estados estadoActual = apagado;
 
 //----------------------------------------------------------------------------------------------------------------------
 //motores
-#define motorDER_1 2
+#define motorDER_1 4
 #define motorDER_2 5
 #define motorIZQ_1 6
 #define motorIZQ_2 7
 
+#define D2 2
 //pwm
 #define pwmDer 3
 #define pwmIzq 9
@@ -43,10 +45,14 @@ const int minDistancia = 150;
 const int esperaInicio = 5000;
 unsigned long ti = 0;
 const int buscaEspera = 3000;
+const int umbralCNY = 400;
+
 //variables
 int distDer = 0;
 int distCen = 0;
 int distIzq = 0;
+
+int velocidadPWM = 0;
 
 
 void setup() {
@@ -73,64 +79,77 @@ void setup() {
   //LEDs
   pinMode(ledVerde, OUTPUT);
   pinMode(ledRojo, OUTPUT);
+
+  Serial.begin(9600);
 }
 
 void loop() {
   switch (estadoActual) {
-    case apagado:
+    case APAGADO:
       {
+        digitalWrite(ledVerde, LOW);
         detenerMotores();
 
         if (digitalRead(swInicio) == LOW) {  //si se presiona el boton empieza a esperar
-          estadoActual = espera;
+          estadoActual = ESPERA;
           ti = millis();
         }
         break;
       }
-    case espera:
+    case ESPERA:
       {
         detenerMotores();
         if (intervalo(ti, esperaInicio)) {  // se fija si pasaron 5 seg
-          estadoActual = piso;
+          estadoActual = INICIO;
+          ti = millis();
         }
         break;
       }
-    case piso:
+    case INICIO:
       {
+        digitalWrite(D2, HIGH);
         digitalWrite(ledVerde, HIGH);
-        ti = millis();
-        irDerecha();
+        irDerecha();  //gira por dos segundos antes de empezar a leer el piso (estrategia de inicio)
         if (intervalo(ti, 2000)) {
-          if (analogRead(cnyDer) > 0 && analogRead(cnyIzq) > 0) {  //si el piso lee negro pasa a ver si hay enemigos
-            estadoActual = ataque;
-          } else if (analogRead(cnyDer) > 0 && analogRead(cnyIzq) < 1) {  //si el lado izquierdo ve blanco, gira
-            irAtras();
-            irIzquierda();
-          } else if (analogRead(cnyDer) < 1 && analogRead(cnyIzq) > 0) {  //si el lado derecho ve blanco, gira
-            irAtras();
-            irDerecha();
-          } else {  //si lee blanco completamente
-            irAtras();
-          }
+          estadoActual = PISO;
+          ti = millis();
         }
         break;
       }
-    case ataque:
+    case PISO:
       {
-        digitalWrite(ledVerde, HIGH);
-        distDer = medirDistancia(ECHO_1, TRIG_1);
-        distCen = medirDistancia(ECHO_2, TRIG_2);
-        distIzq = medirDistancia(ECHO_3, TRIG_3);
-        ti = millis();
-        irDerecha();
-        intervalo(ti, buscaEspera);
-        atacarEnemigo();
-        if (senCNY(cnyDer) < 1 || senCNY(cnyIzq) < 1) {
-          estadoActual = piso;
+        if (senCNY(cnyDer) > umbralCNY && senCNY(cnyIzq) > umbralCNY) {  //si el piso lee negro pasa a ver si hay enemigos
+          estadoActual = ATAQUE;
+        } else if (senCNY(cnyDer) > umbralCNY && senCNY(cnyIzq) < umbralCNY) {  //si el lado izquierdo ve blanco, gira
+          irAtras();
+          if (intervalo(ti, 2000)) {
+            irIzquierda();
+          }
+        } else if (senCNY(cnyDer) < umbralCNY && senCNY(cnyIzq) > umbralCNY) {  //si el lado derecho ve blanco, gira
+          irAtras();
+          if (intervalo(ti, 2000)) {
+            irDerecha();
+          }
+        } else {  //si lee blanco completamente
+          irAtras();
         }
-        break;
       }
+      break;
   }
+  case ATAQUE:
+    {
+      distDer = medirDistancia(ECHO_1, TRIG_1);
+      distCen = medirDistancia(ECHO_2, TRIG_2);
+      distIzq = medirDistancia(ECHO_3, TRIG_3);
+      irDerecha();
+      atacarEnemigo();
+      if (senCNY(cnyDer) < umbralCNY || senCNY(cnyIzq) < umbralCNY) {
+        estadoActual = PISO;
+        ti = millis();
+      }
+      break;
+    }
+}
 }
 
 
@@ -148,15 +167,20 @@ void atacarEnemigo() {  //
 }
 
 int senCNY(int a) {
-  bool valorSenCNY = map(analogRead(a), 0, 1023, 0, 1);
+  int valorSenCNY = analogRead(a);
   return valorSenCNY;
 }
 
 void irDerecha() {  //gira a la derecha
+  Serial.println("Va a la derecha");
   digitalWrite(motorDER_1, HIGH);
   digitalWrite(motorDER_2, LOW);
   digitalWrite(motorIZQ_1, HIGH);
   digitalWrite(motorIZQ_2, LOW);
+  for( velocidadPWM <= 230; velocidadPWM += 5){
+    analogWrite(pwmDer, velocidadPWM);
+    analogWrite(pwmIzq, velocidadPWM);
+  }
 }
 
 void irIzquierda() {  //gira a la izquierda
@@ -164,6 +188,10 @@ void irIzquierda() {  //gira a la izquierda
   digitalWrite(motorDER_2, HIGH);
   digitalWrite(motorIZQ_1, LOW);
   digitalWrite(motorIZQ_2, HIGH);
+  for( velocidadPWM <= 230; velocidadPWM += 5){
+    analogWrite(pwmDer, velocidadPWM);
+    analogWrite(pwmIzq, velocidadPWM);
+  }
 }
 
 void irAdelante() {  //va adelante
@@ -171,6 +199,10 @@ void irAdelante() {  //va adelante
   digitalWrite(motorDER_2, LOW);
   digitalWrite(motorIZQ_1, LOW);
   digitalWrite(motorIZQ_2, HIGH);
+  for( velocidadPWM <= 230; velocidadPWM += 5){
+    analogWrite(pwmDer, velocidadPWM);
+    analogWrite(pwmIzq, velocidadPWM);
+  }
 }
 
 void irAtras() {  //va atras
@@ -178,6 +210,10 @@ void irAtras() {  //va atras
   digitalWrite(motorDER_2, HIGH);
   digitalWrite(motorIZQ_1, HIGH);
   digitalWrite(motorIZQ_2, LOW);
+  for( velocidadPWM <= 230; velocidadPWM += 5){
+    analogWrite(pwmDer, velocidadPWM);
+    analogWrite(pwmIzq, velocidadPWM);
+  }
 }
 
 void detenerMotores() {  //motores detenidos
@@ -192,6 +228,9 @@ float medirDistancia(int a, int b) {  //para medir la distancia
   delayMicroseconds(10);
   digitalWrite(a, LOW);
   int tiempo = pulseIn(b, HIGH, 30000);
+  if (tiempo == 0) {
+    return 999;
+  }
   //delay(100);
   return tiempo / 59;
 }
