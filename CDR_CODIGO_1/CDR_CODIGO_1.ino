@@ -54,6 +54,83 @@ int distIzq = 0;
 
 int velocidadPWM = 0;
 
+int senCNY(int a) {
+  int valorSenCNY = analogRead(a);
+  return valorSenCNY;
+}
+
+void irDerecha() {  //gira a la derecha
+  Serial.println("Va a la derecha");
+  digitalWrite(motorDER_1, HIGH);
+  digitalWrite(motorDER_2, LOW);
+  digitalWrite(motorIZQ_1, HIGH);
+  digitalWrite(motorIZQ_2, LOW);
+  for( int velocidadPWM = 0; velocidadPWM <= 230; velocidadPWM += 5){
+    analogWrite(pwmDer, velocidadPWM);
+    analogWrite(pwmIzq, velocidadPWM);
+  }
+}
+
+void irIzquierda() {  //gira a la izquierda
+  digitalWrite(motorDER_1, LOW);
+  digitalWrite(motorDER_2, HIGH);
+  digitalWrite(motorIZQ_1, LOW);
+  digitalWrite(motorIZQ_2, HIGH);
+  for(int velocidadPWM = 0; velocidadPWM <= 230; velocidadPWM += 5){
+    analogWrite(pwmDer, velocidadPWM);
+    analogWrite(pwmIzq, velocidadPWM);
+  }
+}
+
+void irAdelante() {  //va adelante
+  digitalWrite(motorDER_1, HIGH);
+  digitalWrite(motorDER_2, LOW);
+  digitalWrite(motorIZQ_1, LOW);
+  digitalWrite(motorIZQ_2, HIGH);
+  for(int velocidadPWM = 0; velocidadPWM <= 230; velocidadPWM += 5){
+    analogWrite(pwmDer, velocidadPWM);
+    analogWrite(pwmIzq, velocidadPWM);
+  }
+}
+
+void irAtras() {  //va atras
+  digitalWrite(motorDER_1, LOW);
+  digitalWrite(motorDER_2, HIGH);
+  digitalWrite(motorIZQ_1, HIGH);
+  digitalWrite(motorIZQ_2, LOW);
+  for(int velocidadPWM = 0; velocidadPWM <= 230; velocidadPWM += 5){
+    analogWrite(pwmDer, velocidadPWM);
+    analogWrite(pwmIzq, velocidadPWM);
+  }
+}
+
+void detenerMotores() {  //motores detenidos
+  digitalWrite(motorDER_1, LOW);
+  digitalWrite(motorDER_2, LOW);
+  digitalWrite(motorIZQ_1, LOW);
+  digitalWrite(motorIZQ_2, LOW);
+}
+
+float medirDistancia(int a, int b) {  //para medir la distancia
+  digitalWrite(a, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(a, LOW);
+  int tiempo = pulseIn(b, HIGH, 30000);
+  if (tiempo == 0) {
+    return 999;
+  }
+  //delay(100);
+  return tiempo / 59;
+}
+
+bool intervalo(long tiempoi, int t) {  //para ver si x intervalo se cumplio o no
+
+  if (millis() >= tiempoi + t) {
+    return true;
+  } else {
+    return false;
+  }
+}
 
 void setup() {
   //ultraSonicos
@@ -135,8 +212,7 @@ void loop() {
         }
       }
       break;
-  }
-  case ATAQUE:
+      case ATAQUE:
     {
       distDer = medirDistancia(ECHO_1, TRIG_1);
       distCen = medirDistancia(ECHO_2, TRIG_2);
@@ -149,8 +225,9 @@ void loop() {
       }
       break;
     }
+  }
 }
-}
+
 
 
 
@@ -165,7 +242,7 @@ void atacarEnemigo() {  //
     irIzquierda();
   }
 }
-
+/*
 int senCNY(int a) {
   int valorSenCNY = analogRead(a);
   return valorSenCNY;
@@ -242,4 +319,4 @@ bool intervalo(long tiempoi, int t) {  //para ver si x intervalo se cumplio o no
   } else {
     return false;
   }
-}
+}*/
