@@ -1,9 +1,13 @@
+//maquinas de estado!!
 enum estados { APAGADO,
                ESPERA,
                INICIO,  //USAR MAYÚSCULAS
                PISO,
                ATAQUE };
 estados estadoActual = APAGADO;
+
+enum velocidad {ADELANTE, ATRAS, DERECHA, IZQUIERDA};
+velocidad velocidadPWM = ;
 //----------------------------------------------------------------------------------------------------------------------
 //botones
 #define swInicio 11
@@ -52,7 +56,22 @@ int distDer = 0;
 int distCen = 0;
 int distIzq = 0;
 
-int velocidadPWM = 0;
+int velocidadPWM_DER = 0;
+int velocidadPWM_IZQ = 0;
+//----------------------------------------------------------------------------------------------------------------------
+//funciones
+
+void atacarEnemigo() {  //si el enemigo esta cerca, lo ataca
+  if (distCen < minDistancia) {
+    irAdelante();
+  }
+  if (distDer < minDistancia) {
+    irDerecha();
+  }
+  if (distIzq < minDistancia) {
+    irIzquierda();
+  }
+}
 
 int senCNY(int a) {
   int valorSenCNY = analogRead(a);
@@ -94,11 +113,13 @@ void irAdelante() {  //va adelante
 }
 
 void irAtras() {  //va atras
+  static int velocidadPWM = 0;
   digitalWrite(motorDER_1, LOW);
   digitalWrite(motorDER_2, HIGH);
   digitalWrite(motorIZQ_1, HIGH);
   digitalWrite(motorIZQ_2, LOW);
-  for(int velocidadPWM = 0; velocidadPWM <= 230; velocidadPWM += 5){
+  velocidadPWM += 20;
+  velocidadPWM = constrain(velocidadPWM, 0, 255);
     analogWrite(pwmDer, velocidadPWM);
     analogWrite(pwmIzq, velocidadPWM);
   }
@@ -229,9 +250,11 @@ void loop() {
 }
 
 
+void velocidadMotores(){
+  s
+}
 
-
-void atacarEnemigo() {  //
+void atacarEnemigo() {  
   if (distCen < minDistancia) {
     irAdelante();
   }
@@ -242,81 +265,3 @@ void atacarEnemigo() {  //
     irIzquierda();
   }
 }
-/*
-int senCNY(int a) {
-  int valorSenCNY = analogRead(a);
-  return valorSenCNY;
-}
-
-void irDerecha() {  //gira a la derecha
-  Serial.println("Va a la derecha");
-  digitalWrite(motorDER_1, HIGH);
-  digitalWrite(motorDER_2, LOW);
-  digitalWrite(motorIZQ_1, HIGH);
-  digitalWrite(motorIZQ_2, LOW);
-  for( velocidadPWM <= 230; velocidadPWM += 5){
-    analogWrite(pwmDer, velocidadPWM);
-    analogWrite(pwmIzq, velocidadPWM);
-  }
-}
-
-void irIzquierda() {  //gira a la izquierda
-  digitalWrite(motorDER_1, LOW);
-  digitalWrite(motorDER_2, HIGH);
-  digitalWrite(motorIZQ_1, LOW);
-  digitalWrite(motorIZQ_2, HIGH);
-  for( velocidadPWM <= 230; velocidadPWM += 5){
-    analogWrite(pwmDer, velocidadPWM);
-    analogWrite(pwmIzq, velocidadPWM);
-  }
-}
-
-void irAdelante() {  //va adelante
-  digitalWrite(motorDER_1, HIGH);
-  digitalWrite(motorDER_2, LOW);
-  digitalWrite(motorIZQ_1, LOW);
-  digitalWrite(motorIZQ_2, HIGH);
-  for( velocidadPWM <= 230; velocidadPWM += 5){
-    analogWrite(pwmDer, velocidadPWM);
-    analogWrite(pwmIzq, velocidadPWM);
-  }
-}
-
-void irAtras() {  //va atras
-  digitalWrite(motorDER_1, LOW);
-  digitalWrite(motorDER_2, HIGH);
-  digitalWrite(motorIZQ_1, HIGH);
-  digitalWrite(motorIZQ_2, LOW);
-  for( velocidadPWM <= 230; velocidadPWM += 5){
-    analogWrite(pwmDer, velocidadPWM);
-    analogWrite(pwmIzq, velocidadPWM);
-  }
-}
-
-void detenerMotores() {  //motores detenidos
-  digitalWrite(motorDER_1, LOW);
-  digitalWrite(motorDER_2, LOW);
-  digitalWrite(motorIZQ_1, LOW);
-  digitalWrite(motorIZQ_2, LOW);
-}
-
-float medirDistancia(int a, int b) {  //para medir la distancia
-  digitalWrite(a, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(a, LOW);
-  int tiempo = pulseIn(b, HIGH, 30000);
-  if (tiempo == 0) {
-    return 999;
-  }
-  //delay(100);
-  return tiempo / 59;
-}
-
-bool intervalo(long tiempoi, int t) {  //para ver si x intervalo se cumplio o no
-
-  if (millis() >= tiempoi + t) {
-    return true;
-  } else {
-    return false;
-  }
-}*/
