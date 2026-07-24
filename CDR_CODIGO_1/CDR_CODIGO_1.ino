@@ -1,13 +1,17 @@
 //maquinas de estado!!
 enum estados { APAGADO,
                ESPERA,
-               INICIO,  //USAR MAYÚSCULAS
+               INICIO,  
                PISO,
                ATAQUE };
 estados estadoActual = APAGADO;
 
-enum velocidad {ADELANTE, ATRAS, DERECHA, IZQUIERDA};
-velocidad velocidadPWM = ;
+enum motores { ADELANTE,
+               ATRAS,
+               DERECHA,
+               IZQUIERDA,
+               DETENIDO };
+motores estadoMotores = DETENIDO;
 //----------------------------------------------------------------------------------------------------------------------
 //botones
 #define swInicio 11
@@ -59,17 +63,92 @@ int distIzq = 0;
 int velocidadPWM_DER = 0;
 int velocidadPWM_IZQ = 0;
 //----------------------------------------------------------------------------------------------------------------------
+//velocidades
+switch (estadoMotores) {
+  case ADELANTE:
+    {
+      static int velocidadPWM_DER = 0;
+      static int velocidadPWM_IZQ = 0;
+      digitalWrite(motorDER_1, HIGH);
+      digitalWrite(motorDER_2, LOW);
+      digitalWrite(motorIZQ_1, LOW);
+      digitalWrite(motorIZQ_2, HIGH);
+      velocidadPWM_DER += 20;
+      velocidadPWM_DER = constrain(velocidadPWM_DER, 0, 255);
+      velocidadPWM_IZQ += 20;
+      velocidadPWM_IZQ = constrain(velocidadPWM_IZQ, 0, 255);
+      analogWrite(pwmDer, velocidadPWM_DER);
+      analogWrite(pwmIzq, velocidadPWM_IZQ);
+    }
+  case ATRAS:
+    {
+      static int velocidadPWM_DER = 0;
+      static int velocidadPWM_IZQ = 0;
+      digitalWrite(motorDER_1, LOW);
+      digitalWrite(motorDER_2, HIGH);
+      digitalWrite(motorIZQ_1, HIGH);
+      digitalWrite(motorIZQ_2, LOW);
+      velocidadPWM_DER += 20;
+      velocidadPWM_DER = constrain(velocidadPWM_DER, 0, 255);
+      velocidadPWM_IZQ += 20;
+      velocidadPWM_IZQ = constrain(velocidadPWM_IZQ, 0, 255);
+      analogWrite(pwmDer, velocidadPWM_DER);
+      analogWrite(pwmIzq, velocidadPWM_IZQ);
+    }
+  case DERECHA:
+    {
+      static int velocidadPWM_DER = 0;
+      static int velocidadPWM_IZQ = 0;
+      Serial.println("Va a la derecha");
+      digitalWrite(motorDER_1, HIGH);
+      digitalWrite(motorDER_2, LOW);
+      digitalWrite(motorIZQ_1, HIGH);
+      digitalWrite(motorIZQ_2, LOW);
+      velocidadPWM_DER += 30;
+      velocidadPWM_DER = constrain(velocidadPWM_DER, 0, 255);
+      velocidadPWM_IZQ += 10;
+      velocidadPWM_IZQ = constrain(velocidadPWM_IZQ, 0, 255);
+      analogWrite(pwmDer, velocidadPWM_DER);
+      analogWrite(pwmIzq, velocidadPWM_IZQ);
+    }
+  case IZQUIERDA:
+    {
+      static int velocidadPWM_DER = 0;
+      static int velocidadPWM_IZQ = 0;
+      digitalWrite(motorDER_1, LOW);
+      digitalWrite(motorDER_2, HIGH);
+      digitalWrite(motorIZQ_1, LOW);
+      digitalWrite(motorIZQ_2, HIGH);
+      velocidadPWM_DER += 10;
+      velocidadPWM_DER = constrain(velocidadPWM_DER, 0, 255);
+      velocidadPWM_IZQ += 30;
+      velocidadPWM_IZQ = constrain(velocidadPWM_IZQ, 0, 255);
+      analogWrite(pwmDer, velocidadPWM_DER);
+      analogWrite(pwmIzq, velocidadPWM_IZQ);
+    }
+  case DETENIDO:
+    {
+      digitalWrite(motorDER_1, LOW);
+      digitalWrite(motorDER_2, LOW);
+      digitalWrite(motorIZQ_1, LOW);
+      digitalWrite(motorIZQ_2, LOW);
+    }
+}
+
 //funciones
 
 void atacarEnemigo() {  //si el enemigo esta cerca, lo ataca
   if (distCen < minDistancia) {
-    irAdelante();
+    //irAdelante();
+    estadoMotores = ADELANTE;
   }
   if (distDer < minDistancia) {
-    irDerecha();
+    //irDerecha();
+    estadoMotores = DERECHA;
   }
   if (distIzq < minDistancia) {
-    irIzquierda();
+    //irIzquierda();
+    estadoMotores = IZQUIERDA;
   }
 }
 
@@ -84,7 +163,7 @@ void irDerecha() {  //gira a la derecha
   digitalWrite(motorDER_2, LOW);
   digitalWrite(motorIZQ_1, HIGH);
   digitalWrite(motorIZQ_2, LOW);
-  for( int velocidadPWM = 0; velocidadPWM <= 230; velocidadPWM += 5){
+  for (int velocidadPWM = 0; velocidadPWM <= 230; velocidadPWM += 5) {
     analogWrite(pwmDer, velocidadPWM);
     analogWrite(pwmIzq, velocidadPWM);
   }
@@ -95,7 +174,7 @@ void irIzquierda() {  //gira a la izquierda
   digitalWrite(motorDER_2, HIGH);
   digitalWrite(motorIZQ_1, LOW);
   digitalWrite(motorIZQ_2, HIGH);
-  for(int velocidadPWM = 0; velocidadPWM <= 230; velocidadPWM += 5){
+  for (int velocidadPWM = 0; velocidadPWM <= 230; velocidadPWM += 5) {
     analogWrite(pwmDer, velocidadPWM);
     analogWrite(pwmIzq, velocidadPWM);
   }
@@ -106,7 +185,7 @@ void irAdelante() {  //va adelante
   digitalWrite(motorDER_2, LOW);
   digitalWrite(motorIZQ_1, LOW);
   digitalWrite(motorIZQ_2, HIGH);
-  for(int velocidadPWM = 0; velocidadPWM <= 230; velocidadPWM += 5){
+  for (int velocidadPWM = 0; velocidadPWM <= 230; velocidadPWM += 5) {
     analogWrite(pwmDer, velocidadPWM);
     analogWrite(pwmIzq, velocidadPWM);
   }
@@ -120,9 +199,9 @@ void irAtras() {  //va atras
   digitalWrite(motorIZQ_2, LOW);
   velocidadPWM += 20;
   velocidadPWM = constrain(velocidadPWM, 0, 255);
-    analogWrite(pwmDer, velocidadPWM);
-    analogWrite(pwmIzq, velocidadPWM);
-  }
+  analogWrite(pwmDer, velocidadPWM);
+  analogWrite(pwmIzq, velocidadPWM);
+}
 }
 
 void detenerMotores() {  //motores detenidos
@@ -186,7 +265,8 @@ void loop() {
     case APAGADO:
       {
         digitalWrite(ledVerde, LOW);
-        detenerMotores();
+        //detenerMotores();
+        estadoMotores = DETENIDO;
 
         if (digitalRead(swInicio) == LOW) {  //si se presiona el boton empieza a esperar
           estadoActual = ESPERA;
@@ -196,7 +276,7 @@ void loop() {
       }
     case ESPERA:
       {
-        detenerMotores();
+        estadoMotores = DETENIDO;
         if (intervalo(ti, esperaInicio)) {  // se fija si pasaron 5 seg
           estadoActual = INICIO;
           ti = millis();
@@ -207,7 +287,8 @@ void loop() {
       {
         digitalWrite(D2, HIGH);
         digitalWrite(ledVerde, HIGH);
-        irDerecha();  //gira por dos segundos antes de empezar a leer el piso (estrategia de inicio)
+        //irDerecha();  //gira por dos segundos antes de empezar a leer el piso (estrategia de inicio)
+        estadoMotores = DERECHA;
         if (intervalo(ti, 2000)) {
           estadoActual = PISO;
           ti = millis();
@@ -219,49 +300,38 @@ void loop() {
         if (senCNY(cnyDer) > umbralCNY && senCNY(cnyIzq) > umbralCNY) {  //si el piso lee negro pasa a ver si hay enemigos
           estadoActual = ATAQUE;
         } else if (senCNY(cnyDer) > umbralCNY && senCNY(cnyIzq) < umbralCNY) {  //si el lado izquierdo ve blanco, gira
-          irAtras();
+          //irAtras();
+          estadoMotores = ATRAS;
           if (intervalo(ti, 2000)) {
-            irIzquierda();
+            //irIzquierda();
+            estadoMotores = IZQUIERDA;
           }
         } else if (senCNY(cnyDer) < umbralCNY && senCNY(cnyIzq) > umbralCNY) {  //si el lado derecho ve blanco, gira
-          irAtras();
+          //irAtras();
+          estadoMotores = ATRAS;
           if (intervalo(ti, 2000)) {
-            irDerecha();
+            //irDerecha();
+            estadoMotores = DERECHA;
           }
         } else {  //si lee blanco completamente
-          irAtras();
+          //irAtras();
+          estadoMotores = ATRAS;
         }
       }
       break;
-      case ATAQUE:
-    {
-      distDer = medirDistancia(ECHO_1, TRIG_1);
-      distCen = medirDistancia(ECHO_2, TRIG_2);
-      distIzq = medirDistancia(ECHO_3, TRIG_3);
-      irDerecha();
-      atacarEnemigo();
-      if (senCNY(cnyDer) < umbralCNY || senCNY(cnyIzq) < umbralCNY) {
-        estadoActual = PISO;
-        ti = millis();
+    case ATAQUE:
+      {
+        distDer = medirDistancia(ECHO_1, TRIG_1);
+        distCen = medirDistancia(ECHO_2, TRIG_2);
+        distIzq = medirDistancia(ECHO_3, TRIG_3);
+        //irDerecha();
+        estadoMotores = DERECHA;
+        atacarEnemigo();
+        if (senCNY(cnyDer) < umbralCNY || senCNY(cnyIzq) < umbralCNY) {
+          estadoActual = PISO;
+          ti = millis();
+        }
+        break;
       }
-      break;
-    }
-  }
-}
-
-
-void velocidadMotores(){
-  s
-}
-
-void atacarEnemigo() {  
-  if (distCen < minDistancia) {
-    irAdelante();
-  }
-  if (distDer < minDistancia) {
-    irDerecha();
-  }
-  if (distIzq < minDistancia) {
-    irIzquierda();
   }
 }
