@@ -64,6 +64,7 @@ int velocidadPWM_DER = 0;
 int velocidadPWM_IZQ = 0;
 //----------------------------------------------------------------------------------------------------------------------
 //velocidades
+void motores(){
 switch (estadoMotores) {
   case ADELANTE:
     {
@@ -133,7 +134,7 @@ switch (estadoMotores) {
       digitalWrite(motorIZQ_1, LOW);
       digitalWrite(motorIZQ_2, LOW);
     }
-}
+}}
 
 //funciones
 
@@ -141,14 +142,17 @@ void atacarEnemigo() {  //si el enemigo esta cerca, lo ataca
   if (distCen < minDistancia) {
     //irAdelante();
     estadoMotores = ADELANTE;
+    motores();
   }
   if (distDer < minDistancia) {
     //irDerecha();
     estadoMotores = DERECHA;
+    motores();
   }
   if (distIzq < minDistancia) {
     //irIzquierda();
     estadoMotores = IZQUIERDA;
+    motores();
   }
 }
 
@@ -249,6 +253,8 @@ void setup() {
   pinMode(motorIZQ_1, OUTPUT);
   pinMode(motorIZQ_2, OUTPUT);
 
+  pinMode(D2, OUTPUT);
+
   //botones
   pinMode(swInicio, INPUT_PULLUP);
   pinMode(swEstrategia, INPUT_PULLUP);
@@ -267,6 +273,7 @@ void loop() {
         digitalWrite(ledVerde, LOW);
         //detenerMotores();
         estadoMotores = DETENIDO;
+        motores();
 
         if (digitalRead(swInicio) == LOW) {  //si se presiona el boton empieza a esperar
           estadoActual = ESPERA;
@@ -279,6 +286,7 @@ void loop() {
         estadoMotores = DETENIDO;
         if (intervalo(ti, esperaInicio)) {  // se fija si pasaron 5 seg
           estadoActual = INICIO;
+          motores();
           ti = millis();
         }
         break;
@@ -289,6 +297,7 @@ void loop() {
         digitalWrite(ledVerde, HIGH);
         //irDerecha();  //gira por dos segundos antes de empezar a leer el piso (estrategia de inicio)
         estadoMotores = DERECHA;
+        motores();
         if (intervalo(ti, 2000)) {
           estadoActual = PISO;
           ti = millis();
@@ -302,20 +311,25 @@ void loop() {
         } else if (senCNY(cnyDer) > umbralCNY && senCNY(cnyIzq) < umbralCNY) {  //si el lado izquierdo ve blanco, gira
           //irAtras();
           estadoMotores = ATRAS;
+          motores();
           if (intervalo(ti, 2000)) {
             //irIzquierda();
             estadoMotores = IZQUIERDA;
+            motores();
           }
         } else if (senCNY(cnyDer) < umbralCNY && senCNY(cnyIzq) > umbralCNY) {  //si el lado derecho ve blanco, gira
           //irAtras();
           estadoMotores = ATRAS;
+          motores();
           if (intervalo(ti, 2000)) {
             //irDerecha();
             estadoMotores = DERECHA;
+            motores();
           }
         } else {  //si lee blanco completamente
           //irAtras();
           estadoMotores = ATRAS;
+          motores();
         }
       }
       break;
@@ -326,6 +340,7 @@ void loop() {
         distIzq = medirDistancia(ECHO_3, TRIG_3);
         //irDerecha();
         estadoMotores = DERECHA;
+        motores();
         atacarEnemigo();
         if (senCNY(cnyDer) < umbralCNY || senCNY(cnyIzq) < umbralCNY) {
           estadoActual = PISO;
