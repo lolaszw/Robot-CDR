@@ -1,7 +1,7 @@
 //maquinas de estado!!
 enum estados { APAGADO,
                ESPERA,
-               INICIO,  
+               INICIO,
                PISO,
                ATAQUE };
 estados estadoActual = APAGADO;
@@ -64,155 +64,91 @@ int velocidadPWM_DER = 0;
 int velocidadPWM_IZQ = 0;
 //----------------------------------------------------------------------------------------------------------------------
 //velocidades
-void motores(){
-switch (estadoMotores) {
-  case ADELANTE:
-    {
-      static int velocidadPWM_DER = 0;
-      static int velocidadPWM_IZQ = 0;
-      digitalWrite(motorDER_1, HIGH);
-      digitalWrite(motorDER_2, LOW);
-      digitalWrite(motorIZQ_1, LOW);
-      digitalWrite(motorIZQ_2, HIGH);
-      velocidadPWM_DER += 20;
-      velocidadPWM_DER = constrain(velocidadPWM_DER, 0, 255);
-      velocidadPWM_IZQ += 20;
-      velocidadPWM_IZQ = constrain(velocidadPWM_IZQ, 0, 255);
-      analogWrite(pwmDer, velocidadPWM_DER);
-      analogWrite(pwmIzq, velocidadPWM_IZQ);
-    }
-  case ATRAS:
-    {
-      static int velocidadPWM_DER = 0;
-      static int velocidadPWM_IZQ = 0;
-      digitalWrite(motorDER_1, LOW);
-      digitalWrite(motorDER_2, HIGH);
-      digitalWrite(motorIZQ_1, HIGH);
-      digitalWrite(motorIZQ_2, LOW);
-      velocidadPWM_DER += 20;
-      velocidadPWM_DER = constrain(velocidadPWM_DER, 0, 255);
-      velocidadPWM_IZQ += 20;
-      velocidadPWM_IZQ = constrain(velocidadPWM_IZQ, 0, 255);
-      analogWrite(pwmDer, velocidadPWM_DER);
-      analogWrite(pwmIzq, velocidadPWM_IZQ);
-    }
-  case DERECHA:
-    {
-      static int velocidadPWM_DER = 0;
-      static int velocidadPWM_IZQ = 0;
-      Serial.println("Va a la derecha");
-      digitalWrite(motorDER_1, HIGH);
-      digitalWrite(motorDER_2, LOW);
-      digitalWrite(motorIZQ_1, HIGH);
-      digitalWrite(motorIZQ_2, LOW);
-      velocidadPWM_DER += 30;
-      velocidadPWM_DER = constrain(velocidadPWM_DER, 0, 255);
-      velocidadPWM_IZQ += 10;
-      velocidadPWM_IZQ = constrain(velocidadPWM_IZQ, 0, 255);
-      analogWrite(pwmDer, velocidadPWM_DER);
-      analogWrite(pwmIzq, velocidadPWM_IZQ);
-    }
-  case IZQUIERDA:
-    {
-      static int velocidadPWM_DER = 0;
-      static int velocidadPWM_IZQ = 0;
-      digitalWrite(motorDER_1, LOW);
-      digitalWrite(motorDER_2, HIGH);
-      digitalWrite(motorIZQ_1, LOW);
-      digitalWrite(motorIZQ_2, HIGH);
-      velocidadPWM_DER += 10;
-      velocidadPWM_DER = constrain(velocidadPWM_DER, 0, 255);
-      velocidadPWM_IZQ += 30;
-      velocidadPWM_IZQ = constrain(velocidadPWM_IZQ, 0, 255);
-      analogWrite(pwmDer, velocidadPWM_DER);
-      analogWrite(pwmIzq, velocidadPWM_IZQ);
-    }
-  case DETENIDO:
-    {
-      digitalWrite(motorDER_1, LOW);
-      digitalWrite(motorDER_2, LOW);
-      digitalWrite(motorIZQ_1, LOW);
-      digitalWrite(motorIZQ_2, LOW);
-    }
-}}
+void motores() {
+  static int velocidadPWM_DER = 0;
+  static int velocidadPWM_IZQ = 0;
+  switch (estadoMotores) {
+    case ADELANTE:
+      {
+        velocidadPWM_DER += 20;
+        velocidadPWM_DER = constrain(velocidadPWM_DER, -255, 255);
+        velocidadPWM_IZQ += 20;
+        velocidadPWM_IZQ = constrain(velocidadPWM_IZQ, -255, 255);
+        pasarPWMAMotores(velocidadPWM_IZQ, velocidadPWM_DER);
+      }
+    case ATRAS:
+      {
+        velocidadPWM_DER -= 20;
+        velocidadPWM_DER = constrain(velocidadPWM_DER, -255, 255);
+        velocidadPWM_IZQ -= 20;
+        velocidadPWM_IZQ = constrain(velocidadPWM_IZQ, -255, 255);
+        pasarPWMAMotores(velocidadPWM_IZQ, velocidadPWM_DER);
+      }
+    case DERECHA:
+      {
+        velocidadPWM_DER -= 30;
+        velocidadPWM_DER = constrain(velocidadPWM_DER, -255, 255);
+        velocidadPWM_IZQ += 10;
+        velocidadPWM_IZQ = constrain(velocidadPWM_IZQ, -255, 255);
+        pasarPWMAMotores(velocidadPWM_IZQ, velocidadPWM_DER);
+      }
+    case IZQUIERDA:
+      {
+        velocidadPWM_DER += 10;
+        velocidadPWM_DER = constrain(velocidadPWM_DER, -255, 255);
+        velocidadPWM_IZQ -= 30;
+        velocidadPWM_IZQ = constrain(velocidadPWM_IZQ, -255, 255);
+        pasarPWMAMotores(velocidadPWM_IZQ, velocidadPWM_DER);
+      }
+    case DETENIDO:
+      {
+        digitalWrite(motorDER_1, LOW);
+        digitalWrite(motorDER_2, LOW);
+        digitalWrite(motorIZQ_1, LOW);
+        digitalWrite(motorIZQ_2, LOW);
+      }
+  }
+}
+
+void pasarPWMAMotores(int valorPWMIzq, int valorPWMDer) {
+  if (valorPWMIzq > 0) {
+    digitalWrite(motorIZQ_1, LOW);
+    digitalWrite(motorIZQ_2, HIGH);
+    analogWrite(pwmIzq, valorPWMIzq);
+  } else {
+    digitalWrite(motorIZQ_1, HIGH);
+    digitalWrite(motorIZQ_2, LOW);
+    analogWrite(pwmIzq, -valorPWMIzq);
+  }
+  if (valorPWMDer > 0) {
+    digitalWrite(motorDER_1, LOW);
+    digitalWrite(motorDER_2, HIGH);
+    analogWrite(pwmDer, valorPWMDer);
+  } else {
+    digitalWrite(motorIZQ_1, HIGH);
+    digitalWrite(motorIZQ_2, LOW);
+    analogWrite(pwmDer, -valorPWMDer);
+  }
+}
 
 //funciones
 
 void atacarEnemigo() {  //si el enemigo esta cerca, lo ataca
+  motores();
   if (distCen < minDistancia) {
-    //irAdelante();
     estadoMotores = ADELANTE;
-    motores();
   }
   if (distDer < minDistancia) {
-    //irDerecha();
     estadoMotores = DERECHA;
-    motores();
   }
   if (distIzq < minDistancia) {
-    //irIzquierda();
     estadoMotores = IZQUIERDA;
-    motores();
   }
 }
 
 int senCNY(int a) {
   int valorSenCNY = analogRead(a);
   return valorSenCNY;
-}
-
-void irDerecha() {  //gira a la derecha
-  Serial.println("Va a la derecha");
-  digitalWrite(motorDER_1, HIGH);
-  digitalWrite(motorDER_2, LOW);
-  digitalWrite(motorIZQ_1, HIGH);
-  digitalWrite(motorIZQ_2, LOW);
-  for (int velocidadPWM = 0; velocidadPWM <= 230; velocidadPWM += 5) {
-    analogWrite(pwmDer, velocidadPWM);
-    analogWrite(pwmIzq, velocidadPWM);
-  }
-}
-
-void irIzquierda() {  //gira a la izquierda
-  digitalWrite(motorDER_1, LOW);
-  digitalWrite(motorDER_2, HIGH);
-  digitalWrite(motorIZQ_1, LOW);
-  digitalWrite(motorIZQ_2, HIGH);
-  for (int velocidadPWM = 0; velocidadPWM <= 230; velocidadPWM += 5) {
-    analogWrite(pwmDer, velocidadPWM);
-    analogWrite(pwmIzq, velocidadPWM);
-  }
-}
-
-void irAdelante() {  //va adelante
-  digitalWrite(motorDER_1, HIGH);
-  digitalWrite(motorDER_2, LOW);
-  digitalWrite(motorIZQ_1, LOW);
-  digitalWrite(motorIZQ_2, HIGH);
-  for (int velocidadPWM = 0; velocidadPWM <= 230; velocidadPWM += 5) {
-    analogWrite(pwmDer, velocidadPWM);
-    analogWrite(pwmIzq, velocidadPWM);
-  }
-}
-
-void irAtras() {  //va atras
-  static int velocidadPWM = 0;
-  digitalWrite(motorDER_1, LOW);
-  digitalWrite(motorDER_2, HIGH);
-  digitalWrite(motorIZQ_1, HIGH);
-  digitalWrite(motorIZQ_2, LOW);
-  velocidadPWM += 20;
-  velocidadPWM = constrain(velocidadPWM, 0, 255);
-  analogWrite(pwmDer, velocidadPWM);
-  analogWrite(pwmIzq, velocidadPWM);
-}
-}
-
-void detenerMotores() {  //motores detenidos
-  digitalWrite(motorDER_1, LOW);
-  digitalWrite(motorDER_2, LOW);
-  digitalWrite(motorIZQ_1, LOW);
-  digitalWrite(motorIZQ_2, LOW);
 }
 
 float medirDistancia(int a, int b) {  //para medir la distancia
@@ -254,7 +190,6 @@ void setup() {
   pinMode(motorIZQ_2, OUTPUT);
 
   pinMode(D2, OUTPUT);
-
   //botones
   pinMode(swInicio, INPUT_PULLUP);
   pinMode(swEstrategia, INPUT_PULLUP);
@@ -267,13 +202,12 @@ void setup() {
 }
 
 void loop() {
+  motores();
   switch (estadoActual) {
     case APAGADO:
       {
         digitalWrite(ledVerde, LOW);
-        //detenerMotores();
         estadoMotores = DETENIDO;
-        motores();
 
         if (digitalRead(swInicio) == LOW) {  //si se presiona el boton empieza a esperar
           estadoActual = ESPERA;
@@ -286,7 +220,6 @@ void loop() {
         estadoMotores = DETENIDO;
         if (intervalo(ti, esperaInicio)) {  // se fija si pasaron 5 seg
           estadoActual = INICIO;
-          motores();
           ti = millis();
         }
         break;
@@ -297,7 +230,6 @@ void loop() {
         digitalWrite(ledVerde, HIGH);
         //irDerecha();  //gira por dos segundos antes de empezar a leer el piso (estrategia de inicio)
         estadoMotores = DERECHA;
-        motores();
         if (intervalo(ti, 2000)) {
           estadoActual = PISO;
           ti = millis();
@@ -309,27 +241,19 @@ void loop() {
         if (senCNY(cnyDer) > umbralCNY && senCNY(cnyIzq) > umbralCNY) {  //si el piso lee negro pasa a ver si hay enemigos
           estadoActual = ATAQUE;
         } else if (senCNY(cnyDer) > umbralCNY && senCNY(cnyIzq) < umbralCNY) {  //si el lado izquierdo ve blanco, gira
-          //irAtras();
           estadoMotores = ATRAS;
-          motores();
+
           if (intervalo(ti, 2000)) {
-            //irIzquierda();
+
             estadoMotores = IZQUIERDA;
-            motores();
           }
         } else if (senCNY(cnyDer) < umbralCNY && senCNY(cnyIzq) > umbralCNY) {  //si el lado derecho ve blanco, gira
-          //irAtras();
-          estadoMotores = ATRAS;
-          motores();
+           estadoMotores = ATRAS;
           if (intervalo(ti, 2000)) {
-            //irDerecha();
             estadoMotores = DERECHA;
-            motores();
           }
         } else {  //si lee blanco completamente
-          //irAtras();
           estadoMotores = ATRAS;
-          motores();
         }
       }
       break;
@@ -338,9 +262,7 @@ void loop() {
         distDer = medirDistancia(ECHO_1, TRIG_1);
         distCen = medirDistancia(ECHO_2, TRIG_2);
         distIzq = medirDistancia(ECHO_3, TRIG_3);
-        //irDerecha();
         estadoMotores = DERECHA;
-        motores();
         atacarEnemigo();
         if (senCNY(cnyDer) < umbralCNY || senCNY(cnyIzq) < umbralCNY) {
           estadoActual = PISO;
