@@ -81,8 +81,7 @@ int distDer = 0;
 int distCen = 0;
 int distIzq = 0;
 
-int velocidadPWM_DER = 0;
-int velocidadPWM_IZQ = 0;
+byte dipAnalizado = 0b00000000;
 //--------------------------------------------MAQUINAS DE ESTADO--------------------------------------------------------------------------
 //velocidades
 void motores() {
@@ -155,11 +154,12 @@ void motores() {
 }
 
 void estrategiaAnalizada() {
-  
+
   estrategiaActual = dipAnalizado;
   switch (estrategiaActual) {
     case 0b00000000:
       {
+        break;
       }
     case 0b11000000:
       {
@@ -299,7 +299,7 @@ void pasarPWMAMotores(int valorPWMIzq, int valorPWMDer) {
 }
 //------------------------------------------------------------------------------------------------------------------------------
 void atacarEnemigo() {  //si el enemigo esta cerca, lo ataca
-  motores();
+
   if (distCen < minDistancia) {
     estadoMotores = ADELANTE;
   }
@@ -354,7 +354,7 @@ void setup() {
   pinMode(motorIZQ_2, OUTPUT);
 
   pinMode(D2, OUTPUT);
-  
+
   //botones
 
   pinMode(swInicio, INPUT_PULLUP);
@@ -379,7 +379,8 @@ void loop() {
     case ANALIZAR:
       {
         int leerDip = analogRead(DIP);
-       int dipAnalizado = leerDip & 0b11110000;
+        int dipAnalizado = leerDip & 0b11110000;
+        break;
       }
     case ESPERA:
       {
@@ -392,14 +393,7 @@ void loop() {
       }
     case INICIO:
       {
-
-        digitalWrite(D2, HIGH);
-        //irDerecha();  //gira por dos segundos antes de empezar a leer el piso (estrategia de inicio)
-        estadoMotores = DERECHA;
-        if (intervalo(ti, 2000)) {
-          estadoActual = PISO;
-          ti = millis();
-        }
+        estrategiaAnalizada();
         break;
       }
     case PISO:
