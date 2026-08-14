@@ -3,8 +3,8 @@ enum estados { APAGADO,
                ANALIZAR,
                ESPERA,
                INICIO,
-               PISO,
-               ATAQUE };
+               COMBATE
+};
 estados estadoActual = APAGADO;
 
 enum movMotores { ADELANTE,
@@ -16,21 +16,21 @@ enum movMotores { ADELANTE,
                   DETENIDO };
 movMotores estadoMotores = DETENIDO;
 
-enum estrategias { INIT = 0b00000000,         //init
-                   G_IZQ = 0b11000000,        //giro izq
-                   G_IZQ2 = 0b11010000,       //giro izq
-                   G_DER = 0b10010000,        //giro der
-                   G_DER2 = 0b10000000,       //giro der
-                   A_IZQ = 0b00110000,        //arco izq
-                   A_IZQ2 = 0b01110000,       //arco izq
-                   A_DER = 0b00100000,        //arco der
-                   A_DER2 = 0b01100000,       //arco der
-                   G_IZQ_A_IZQ = 0b11110000,  //giro izq, arco izq
-                   G_IZQ_A_DER = 0b11100000,  //giro izq, arco der
-                   G_DER_A_IZQ = 0b10110000,  //giro der, arco izq
-                   G_DER_A_DER = 0b10100000,  //giro der, arco der
+enum estrategiasIni { INIT = 0b00000000,    //init
+                      G_IZQ = 0b11000000,   //giro izq
+                      G_IZQ2 = 0b11010000,  //giro izq
+                      G_DER = 0b10000000,   //giro der
+                      G_DER2 = 0b10010000   //giro Der
 };
-estrategias estrategiaActual = 0b00000000;
+estrategiasIni estrategiaIniActual = 0b00000000;
+
+enum estrategiasAta { INIT_A = 0b00000000,    //init
+                      G_IZQ_A = 0b11000000,   //giro izq
+                      G_IZQ2_A = 0b11010000,  //giro izq
+                      G_DER_A = 0b10000000,   //giro der
+                      G_DER2_A = 0b10010000   //giro Der
+};
+estrategiasAta estrategiaAtaActual = 0b00000000;
 //----------------------------------------------------------------------------------------------------------------------
 //botones
 #define swInicio 11
@@ -75,7 +75,8 @@ const int esperaInicio = 5000;
 unsigned long ti = 0;
 const int buscaEspera = 3000;
 const int umbralCNY = 400;
-
+const int velMaxIzq = 255;
+const int velMaxDer = 255;
 //variables
 int distDer = 0;
 int distCen = 0;
@@ -84,61 +85,43 @@ int distIzq = 0;
 byte dipAnalizado = 0b00000000;
 //--------------------------------------------MAQUINAS DE ESTADO--------------------------------------------------------------------------
 //velocidades
-void motores() {
+void motores(int pwm_der, int pwm_izq) {
   static int velocidadPWM_DER = 0;
   static int velocidadPWM_IZQ = 0;
   switch (estadoMotores) {
     case ADELANTE:
       {
         velocidadPWM_DER += 20;
-        velocidadPWM_DER = constrain(velocidadPWM_DER, -255, 255);
+        velocidadPWM_DER = constrain(velocidadPWM_DER, -pwm_der, pwm_der);
         velocidadPWM_IZQ += 20;
-        velocidadPWM_IZQ = constrain(velocidadPWM_IZQ, -255, 255);
+        velocidadPWM_IZQ = constrain(velocidadPWM_IZQ, -pwm_izq, pwm_izq);
         pasarPWMAMotores(velocidadPWM_IZQ, velocidadPWM_DER);
         break;
       }
     case ATRAS:
       {
         velocidadPWM_DER -= 20;
-        velocidadPWM_DER = constrain(velocidadPWM_DER, -255, 255);
+        velocidadPWM_DER = constrain(velocidadPWM_DER, -pwm_der, pwm_der);
         velocidadPWM_IZQ -= 20;
-        velocidadPWM_IZQ = constrain(velocidadPWM_IZQ, -255, 255);
+        velocidadPWM_IZQ = constrain(velocidadPWM_IZQ, -pwm_izq, pwm_izq);
         pasarPWMAMotores(velocidadPWM_IZQ, velocidadPWM_DER);
         break;
       }
     case DERECHA:
       {
         velocidadPWM_DER -= 30;
-        velocidadPWM_DER = constrain(velocidadPWM_DER, -255, 255);
+        velocidadPWM_DER = constrain(velocidadPWM_DER, -pwm_der, pwm_der);
         velocidadPWM_IZQ += 10;
-        velocidadPWM_IZQ = constrain(velocidadPWM_IZQ, -255, 255);
+        velocidadPWM_IZQ = constrain(velocidadPWM_IZQ, -pwm_izq, pwm_izq);
         pasarPWMAMotores(velocidadPWM_IZQ, velocidadPWM_DER);
         break;
       }
     case IZQUIERDA:
       {
         velocidadPWM_DER += 10;
-        velocidadPWM_DER = constrain(velocidadPWM_DER, -255, 255);
+        velocidadPWM_DER = constrain(velocidadPWM_DER, -pwm_der, pwm_der);
         velocidadPWM_IZQ -= 30;
-        velocidadPWM_IZQ = constrain(velocidadPWM_IZQ, -255, 255);
-        pasarPWMAMotores(velocidadPWM_IZQ, velocidadPWM_DER);
-        break;
-      }
-    case ARCO_IZQ:
-      {
-        velocidadPWM_DER += 8;
-        velocidadPWM_DER = constrain(velocidadPWM_DER, -180, 180);
-        velocidadPWM_IZQ -= 20;
-        velocidadPWM_IZQ = constrain(velocidadPWM_IZQ, -255, 255);
-        pasarPWMAMotores(velocidadPWM_IZQ, velocidadPWM_DER);
-        break;
-      }
-    case ARCO_DER:
-      {
-        velocidadPWM_DER -= 20;
-        velocidadPWM_DER = constrain(velocidadPWM_DER, -255, 255);
-        velocidadPWM_IZQ += 8;
-        velocidadPWM_IZQ = constrain(velocidadPWM_IZQ, -180, 180);
+        velocidadPWM_IZQ = constrain(velocidadPWM_IZQ, -pwm_izq, pwm_izq);
         pasarPWMAMotores(velocidadPWM_IZQ, velocidadPWM_DER);
         break;
       }
@@ -153,126 +136,96 @@ void motores() {
   }
 }
 
-void estrategiaAnalizada() {
-
-  estrategiaActual = dipAnalizado;
-  switch (estrategiaActual) {
+void estrategiaIniAnalizada() {
+  estrategiaIniActual = dipAnalizado;
+  switch (estrategiaIniActual) {
     case 0b00000000:
       {
         break;
       }
-    case 0b11000000:
+    case G_IZQ:
       {
         estadoMotores = IZQUIERDA;
         if (intervalo(ti, 170)) {
-          estadoActual = PISO;
+          estadoActual = COMBATE;
           ti = millis();
         }
         break;
       }  //g izq
-    case 0b11010000:
+    case G_IZQ2:
       {
         estadoMotores = IZQUIERDA;
         if (intervalo(ti, 170)) {
-          estadoActual = PISO;
+          estadoActual = COMBATE;
           ti = millis();
         }
         break;
-      }  // g izq
-    case 0b10010000:
+      }  // g dder
+    case G_DER:
       {
         estadoMotores = DERECHA;
         if (intervalo(ti, 170)) {
-          estadoActual = PISO;
+          estadoActual = COMBATE;
           ti = millis();
         }
         break;
-      }  // g der
-    case 0b10000000:
+      }  //g izq
+    case G_DER2:
       {
         estadoMotores = DERECHA;
         if (intervalo(ti, 170)) {
-          estadoActual = PISO;
+          estadoActual = COMBATE;
           ti = millis();
         }
         break;
-      }  //g der
-    case 0b00110000:
+      }
+  }
+}
+void estrategiaAtaque() {
+  estrategiaAtaActual = dipAnalizado;
+  switch (estrategiaAtaActual) {
+    case 0b00000000:
       {
-        estadoMotores = ARCO_IZQ;
-        if (intervalo(ti, 170)) {
-          estadoActual = PISO;
-          ti = millis();
-        }
         break;
-      }  //a izq
-    case 0b01110000:
+      }
+    case G_IZQ_A:
       {
-        estadoMotores = ARCO_IZQ;
-        if (intervalo(ti, 170)) {
-          estadoActual = PISO;
-          ti = millis();
+        if (distCen < minDistancia) {
+          estadoMotores = ADELANTE;
+          millis();
+          if (intervalo(ti, 400)) {
+            estadoMotores = IZQUIERDA;
+            motores(180, 255);
+          }
         }
         break;
-      }  //a izq
-    case 0b00100000:
+      }
+    case G_IZQ2_A:
       {
-        estadoMotores = ARCO_DER;
-        if (intervalo(ti, 170)) {
-          estadoActual = PISO;
-          ti = millis();
+        if (distCen < minDistancia) {
+          estadoMotores = ADELANTE;
+          motores(255,255);
         }
         break;
-      }  //a der
-    case 0b01100000:
-      {
-        estadoMotores = ARCO_DER;
-        if (intervalo(ti, 170)) {
-          estadoActual = PISO;
-          ti = millis();
-        }
-        break;
-      }  //a der
-    case 0b11110000:
+      }
+    case G_DER_A:
       {
         estadoMotores = IZQUIERDA;
         if (intervalo(ti, 170)) {
-          estadoActual = PISO;
-          estadoMotores = ARCO_IZQ;
+          estadoActual = COMBATE;
           ti = millis();
         }
         break;
-      }  //giro izq, arco izq
-    case 0b11100000:
-      {
-        estadoMotores = IZQUIERDA;
-        if (intervalo(ti, 170)) {
-          estadoActual = PISO;
-          estadoMotores = ARCO_DER;
-          ti = millis();
-        }
-        break;
-      }  //giro izq, arco der
-    case 0b10110000:
+      }
+    case G_DER2_A:
       {
         estadoMotores = DERECHA;
         if (intervalo(ti, 170)) {
-          estadoActual = PISO;
-          estadoMotores = ARCO_IZQ;
+          estadoActual = COMBATE;
           ti = millis();
         }
         break;
-      }  //giro der, arco izq
-    case 0b10100000:
-      {
-        estadoMotores = DERECHA;
-        if (intervalo(ti, 170)) {
-          estadoActual = PISO;
-          estadoMotores = ARCO_DER;
-          ti = millis();
-        }
-        break;
-      }  //giro der, arco der
+      }
   }
 }
 //---------------------------------------------FUNCIONES----------------------------------------------------------------------
@@ -302,11 +255,9 @@ void atacarEnemigo() {  //si el enemigo esta cerca, lo ataca
 
   if (distCen < minDistancia) {
     estadoMotores = ADELANTE;
-  }
-  if (distDer < minDistancia) {
+  }else if (distDer < minDistancia) {
     estadoMotores = DERECHA;
-  }
-  if (distIzq < minDistancia) {
+  }else if (distIzq < minDistancia) {
     estadoMotores = IZQUIERDA;
   }
 }
@@ -364,22 +315,18 @@ void setup() {
 }
 
 void loop() {
-  motores();
+  motores(200, 200);
   switch (estadoActual) {
     case APAGADO:
       {
         estadoMotores = DETENIDO;
 
         if (digitalRead(swInicio) == LOW) {  //si se presiona el boton empieza a esperar
-          estadoActual = ESPERA;
           ti = millis();
+          estadoActual = ANALIZAR;
+          int leerDip = analogRead(DIP);
+          int dipAnalizado = leerDip & 0b11110000;
         }
-        break;
-      }
-    case ANALIZAR:
-      {
-        int leerDip = analogRead(DIP);
-        int dipAnalizado = leerDip & 0b11110000;
         break;
       }
     case ESPERA:
@@ -393,18 +340,21 @@ void loop() {
       }
     case INICIO:
       {
-        estrategiaAnalizada();
+        estrategiaIniAnalizada();
         break;
       }
-    case PISO:
+    case COMBATE:
       {
         if (senCNY(cnyDer) > umbralCNY && senCNY(cnyIzq) > umbralCNY) {  //si el piso lee negro pasa a ver si hay enemigos
-          estadoActual = ATAQUE;
+          distDer = medirDistancia(ECHO_1, TRIG_1);
+          distCen = medirDistancia(ECHO_2, TRIG_2);
+          distIzq = medirDistancia(ECHO_3, TRIG_3);
+
+          estrategiaAtaque();
         } else if (senCNY(cnyDer) > umbralCNY && senCNY(cnyIzq) < umbralCNY) {  //si el lado izquierdo ve blanco, gira
           estadoMotores = ATRAS;
 
           if (intervalo(ti, 2000)) {
-
             estadoMotores = IZQUIERDA;
           }
         } else if (senCNY(cnyDer) < umbralCNY && senCNY(cnyIzq) > umbralCNY) {  //si el lado derecho ve blanco, gira
@@ -414,19 +364,6 @@ void loop() {
           }
         } else {  //si lee blanco completamente
           estadoMotores = ATRAS;
-        }
-      }
-      break;
-    case ATAQUE:
-      {
-        distDer = medirDistancia(ECHO_1, TRIG_1);
-        distCen = medirDistancia(ECHO_2, TRIG_2);
-        distIzq = medirDistancia(ECHO_3, TRIG_3);
-        estadoMotores = DERECHA;
-        atacarEnemigo();
-        if (senCNY(cnyDer) < umbralCNY || senCNY(cnyIzq) < umbralCNY) {
-          estadoActual = PISO;
-          ti = millis();
         }
         break;
       }
