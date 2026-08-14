@@ -203,26 +203,57 @@ void estrategiaAtaque() {
     case G_IZQ2_A:
       {
         if (distCen < minDistancia) {
+
           estadoMotores = ADELANTE;
-          motores(255,255);
+          motores(255, 255);
+        } else if (distDer < minDistancia) {
+          estadoMotores = DERECHA;
+          millis();
+          if(intervalo(ti, 170)){
+           estadoMotores = DERECHA;
+            motores(255, 180); 
+          }
+        } else if (distIzq < minDistancia) {
+          estadoMotores = IZQUIERDA;
+          millis();
+          if (intervalo(ti, 170)) {
+            estadoMotores = IZQUIERDA;
+            motores(180, 255);
+          }
         }
         break;
       }
     case G_DER_A:
       {
-        estadoMotores = IZQUIERDA;
-        if (intervalo(ti, 170)) {
-          estadoActual = COMBATE;
-          ti = millis();
+        if (distCen < minDistancia) { //si sensa va para adelante 
+          estadoMotores = ADELANTE;
+          millis();
+          if (intervalo(ti, 400)) { //y dsp de un tiempo hace un arco (querria implementar que gire para donde vuelve a sensar)
+            estadoMotores = IZQUIERDA;
+            motores(180, 255);
+          }
         }
         break;
       }
     case G_DER2_A:
       {
-        estadoMotores = DERECHA;
-        if (intervalo(ti, 170)) {
-          estadoActual = COMBATE;
-          ti = millis();
+        if (distCen < minDistancia) { //cuando sensa, va a max velocidad
+          estadoMotores = ADELANTE;
+          motores(255, 255);
+        } else if (distDer < minDistancia) { //si sensa un costado, gira 90° y hace un arco a la derecha 
+          estadoMotores = DERECHA;
+          millis();
+          if(intervalo(ti, 170)){ /
+           estadoMotores = DERECHA;
+            motores(255, 180); 
+          }
+        } else if (distIzq < minDistancia) { //si sensa un costado, gira 90° y hace un arco a la izquierda 
+          estadoMotores = IZQUIERDA;
+          millis();
+          if (intervalo(ti, 170)) {
+            estadoMotores = IZQUIERDA;
+            motores(180, 255);
+          }
         }
         break;
       }
@@ -255,9 +286,9 @@ void atacarEnemigo() {  //si el enemigo esta cerca, lo ataca
 
   if (distCen < minDistancia) {
     estadoMotores = ADELANTE;
-  }else if (distDer < minDistancia) {
+  } else if (distDer < minDistancia) {
     estadoMotores = DERECHA;
-  }else if (distIzq < minDistancia) {
+  } else if (distIzq < minDistancia) {
     estadoMotores = IZQUIERDA;
   }
 }
@@ -353,6 +384,7 @@ void loop() {
           estrategiaAtaque();
         } else if (senCNY(cnyDer) > umbralCNY && senCNY(cnyIzq) < umbralCNY) {  //si el lado izquierdo ve blanco, gira
           estadoMotores = ATRAS;
+          
 
           if (intervalo(ti, 2000)) {
             estadoMotores = IZQUIERDA;
