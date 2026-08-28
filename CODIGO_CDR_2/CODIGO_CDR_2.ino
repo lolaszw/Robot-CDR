@@ -33,29 +33,29 @@ enum estrategiasAta { INIT_A = 0b00000000,    //init
 estrategiasAta estrategiaAtaActual = 0b00000000;
 //----------------------------------------------------------------------------------------------------------------------
 //botones
-#define swInicio 11
+#define swInicio 2
 #define DIP A2
 
 //----------------------------------------------------------------------------------------------------------------------
 //ultraSonicos:
-#define ECHO_1 A3
-#define TRIG_1 A4
+#define ECHO_1 A4
+#define TRIG_1 12
 
-#define ECHO_2 8
-#define TRIG_2 13
+#define ECHO_2 A7
+#define TRIG_2 11
 
 #define ECHO_3 A1
-#define TRIG_3 A0
+#define TRIG_3 
 
-#define ECHO_4 A1
-#define TRIG_4 A0
+#define ECHO_4 10
+#define TRIG_4 A3
 
-#define ECHO_5 A1
-#define TRIG_5 A0
+#define ECHO_5 A0
+#define TRIG_5 A5
 
 //CNYs
-#define cnyDer A5
-#define cnyIzq A6
+#define cnyDer A6
+#define cnyIzq A7
 
 //----------------------------------------------------------------------------------------------------------------------
 //motores
@@ -64,7 +64,6 @@ estrategiasAta estrategiaAtaActual = 0b00000000;
 #define motorIZQ_1 6
 #define motorIZQ_2 7
 
-#define D2 2
 //pwm
 #define pwmDer 3
 #define pwmIzq 9
@@ -190,7 +189,7 @@ void estrategiaAtaque() {
       }
     case G_IZQ_A:
       {
-        if (distCen < minDistancia) {
+        if (distCen < minDistancia) { //si sensa adelante, se acerca y dsp gira
           estadoMotores = ADELANTE;
           millis();
           if (intervalo(ti, 400)) {
@@ -355,8 +354,32 @@ void loop() {
         if (digitalRead(swInicio) == LOW) {  //si se presiona el boton empieza a esperar
           ti = millis();
           estadoActual = ANALIZAR;
-          int leerDip = analogRead(DIP);
-          int dipAnalizado = leerDip & 0b11110000;
+          int leerDip = 0;
+          for(byte i = 0; i < 8; i++)
+          {
+            leerDip += analogRead(DIP);
+          }
+          leerDip = leerDip / 8;
+          if(leerDip <= 20)
+          {
+            dipAnalizado = 0;
+          }
+          else if(abs(leerDip - 180) <= 20)
+          {
+            dipAnalizado = 1;
+          }
+          else if(abs(leerDip - 306) <= 20)
+          {
+            dipAnalizado = 2;
+          }
+          else if(abs(leerDip - 400) <= 20)
+          {
+            dipAnalizado = 3;
+          }
+          else if(abs(leerDip - 471) <= 20)
+          {
+            dipAnalizado = 4;
+          }
         }
         break;
       }
@@ -377,9 +400,11 @@ void loop() {
     case COMBATE:
       {
         if (senCNY(cnyDer) > umbralCNY && senCNY(cnyIzq) > umbralCNY) {  //si el piso lee negro pasa a ver si hay enemigos
-          distDer = medirDistancia(ECHO_1, TRIG_1);
+          distDer_1 = medirDistancia(ECHO_1, TRIG_1);
+          distDer_2 = medirDistancia(ECHO_4, TRIG_4);
           distCen = medirDistancia(ECHO_2, TRIG_2);
-          distIzq = medirDistancia(ECHO_3, TRIG_3);
+          distIzq_1 = medirDistancia(ECHO_3, TRIG_3);
+          distIzq_2 = medirDistancia(ECHO_3, TRIG_3);
 
           estrategiaAtaque();
         } else if (senCNY(cnyDer) > umbralCNY && senCNY(cnyIzq) < umbralCNY) {  //si el lado izquierdo ve blanco, gira
