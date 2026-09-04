@@ -16,42 +16,42 @@ enum movMotores { ADELANTE,
                   DETENIDO };
 movMotores estadoMotores = DETENIDO;
 
-enum estrategiasIni { INIT = 0b00000000,    //init
-                      G_IZQ = 0b11000000,   //giro izq
-                      G_IZQ2 = 0b11010000,  //giro izq
-                      G_DER = 0b10000000,   //giro der
-                      G_DER2 = 0b10010000   //giro Der
+enum estrategiasIni { INIT ,    //init
+                      G_IZQ,   //giro izq
+                      G_IZQ2,  //giro izq
+                      G_DER,   //giro der
+                      G_DER2   //giro Der
 };
-estrategiasIni estrategiaIniActual = 0b00000000;
+estrategiasIni estrategiaIniActual = 0;
 
-enum estrategiasAta { INIT_A = 0b00000000,    //init
-                      G_IZQ_A = 0b11000000,   //giro izq
-                      G_IZQ2_A = 0b11010000,  //giro izq
-                      G_DER_A = 0b10000000,   //giro der
-                      G_DER2_A = 0b10010000   //giro Der
+enum estrategiasAta { INIT_A,    //init
+                      G_IZQ_A,   //giro izq
+                      G_IZQ2_A ,  //giro izq
+                      G_DER_A ,   //giro der
+                      G_DER2_A   //giro Der
 };
-estrategiasAta estrategiaAtaActual = 0b00000000;
+estrategiasAta estrategiaAtaActual = 0;
 //----------------------------------------------------------------------------------------------------------------------
 //botones
-#define swInicio 2
-#define DIP A2
+#define swInicio 10
+#define DIP A0
 
 //----------------------------------------------------------------------------------------------------------------------
 //ultraSonicos:
-#define ECHO_1 A4
-#define TRIG_1 12
+#define ECHO_1 4
+#define TRIG_1 2
 
-#define ECHO_2 A7
-#define TRIG_2 11
+#define ECHO_2 A5
+#define TRIG_2 A4
 
-#define ECHO_3 A1
-#define TRIG_3 
+#define ECHO_3 12
+#define TRIG_3 11
 
-#define ECHO_4 10
-#define TRIG_4 A3
+#define ECHO_4 A3
+#define TRIG_4 A1
 
-#define ECHO_5 A0
-#define TRIG_5 A5
+#define ECHO_5 A2
+#define TRIG_5 13
 
 //CNYs
 #define cnyDer A6
@@ -59,10 +59,10 @@ estrategiasAta estrategiaAtaActual = 0b00000000;
 
 //----------------------------------------------------------------------------------------------------------------------
 //motores
-#define motorDER_1 4
-#define motorDER_2 5
-#define motorIZQ_1 6
-#define motorIZQ_2 7
+#define motorDER_1 5
+#define motorDER_2 6
+#define motorIZQ_1 7
+#define motorIZQ_2 8
 
 //pwm
 #define pwmDer 3
@@ -77,11 +77,15 @@ const int umbralCNY = 400;
 const int velMaxIzq = 255;
 const int velMaxDer = 255;
 //variables
-int distDer = 0;
+int distDer_1 = 0;
+int distDer_2 = 0;
 int distCen = 0;
-int distIzq = 0;
+int distIzq_1 = 0;
+int distIzq_2 = 0;
 
-byte dipAnalizado = 0b00000000;
+int dipAnalizado = 0;
+
+//byte dipAnalizado = 0b00000000;
 //--------------------------------------------MAQUINAS DE ESTADO--------------------------------------------------------------------------
 //velocidades
 void motores(int pwm_der, int pwm_izq) {
@@ -138,13 +142,13 @@ void motores(int pwm_der, int pwm_izq) {
 void estrategiaIniAnalizada() {
   estrategiaIniActual = dipAnalizado;
   switch (estrategiaIniActual) {
-    case 0b00000000:
+    case INIT:
       {
         break;
       }
     case G_IZQ:
       {
-        estadoMotores = IZQUIERDA;
+        estadoMotores = IZQUIERDA; //gira 90 a la izq
         if (intervalo(ti, 170)) {
           estadoActual = COMBATE;
           ti = millis();
@@ -153,16 +157,16 @@ void estrategiaIniAnalizada() {
       }  //g izq
     case G_IZQ2:
       {
-        estadoMotores = IZQUIERDA;
+        estadoMotores = IZQUIERDA; //gira 90 a la izq 
         if (intervalo(ti, 170)) {
           estadoActual = COMBATE;
           ti = millis();
         }
         break;
-      }  // g dder
+      }  
     case G_DER:
       {
-        estadoMotores = DERECHA;
+        estadoMotores = DERECHA; //gira 90 a la derecha
         if (intervalo(ti, 170)) {
           estadoActual = COMBATE;
           ti = millis();
@@ -171,7 +175,7 @@ void estrategiaIniAnalizada() {
       }  //g izq
     case G_DER2:
       {
-        estadoMotores = DERECHA;
+        estadoMotores = DERECHA; //gira 90 a la derecha
         if (intervalo(ti, 170)) {
           estadoActual = COMBATE;
           ti = millis();
@@ -183,7 +187,7 @@ void estrategiaIniAnalizada() {
 void estrategiaAtaque() {
   estrategiaAtaActual = dipAnalizado;
   switch (estrategiaAtaActual) {
-    case 0b00000000:
+    case INIT_A:
       {
         break;
       }
@@ -193,7 +197,7 @@ void estrategiaAtaque() {
           estadoMotores = ADELANTE;
           millis();
           if (intervalo(ti, 400)) {
-            estadoMotores = IZQUIERDA;
+            estadoMotores = IZQUIERDA; //hace un arco a la izquierda
             motores(180, 255);
           }
         }
@@ -205,14 +209,14 @@ void estrategiaAtaque() {
 
           estadoMotores = ADELANTE;
           motores(255, 255);
-        } else if (distDer < minDistancia) {
+        } else if (distDer_1 < minDistancia) {
           estadoMotores = DERECHA;
           millis();
           if(intervalo(ti, 170)){
            estadoMotores = DERECHA;
             motores(255, 180); 
           }
-        } else if (distIzq < minDistancia) {
+        } else if (distIzq_1 < minDistancia) {
           estadoMotores = IZQUIERDA;
           millis();
           if (intervalo(ti, 170)) {
@@ -228,7 +232,7 @@ void estrategiaAtaque() {
           estadoMotores = ADELANTE;
           millis();
           if (intervalo(ti, 400)) { //y dsp de un tiempo hace un arco (querria implementar que gire para donde vuelve a sensar)
-            estadoMotores = IZQUIERDA;
+            estadoMotores = IZQUIERDA;//lo tengo que hacer con PID --> prox competencia
             motores(180, 255);
           }
         }
@@ -239,18 +243,18 @@ void estrategiaAtaque() {
         if (distCen < minDistancia) { //cuando sensa, va a max velocidad
           estadoMotores = ADELANTE;
           motores(255, 255);
-        } else if (distDer < minDistancia) { //si sensa un costado, gira 90° y hace un arco a la derecha 
+        } else if (distDer_1 < minDistancia) { //si sensa un costado, gira 90° y hace un arco a la derecha 
           estadoMotores = DERECHA;
           millis();
-          if(intervalo(ti, 170)){ /
+          if(intervalo(ti, 170)){ 
            estadoMotores = DERECHA;
             motores(255, 180); 
           }
-        } else if (distIzq < minDistancia) { //si sensa un costado, gira 90° y hace un arco a la izquierda 
+        } else if (distIzq_1 < minDistancia) { //si sensa un costado, gira 90° y hace un arco a la izquierda 
           estadoMotores = IZQUIERDA;
           millis();
           if (intervalo(ti, 170)) {
-            estadoMotores = IZQUIERDA;
+            estadoMotores = IZQUIERDA; 
             motores(180, 255);
           }
         }
@@ -281,16 +285,16 @@ void pasarPWMAMotores(int valorPWMIzq, int valorPWMDer) {
   }
 }
 //------------------------------------------------------------------------------------------------------------------------------
-void atacarEnemigo() {  //si el enemigo esta cerca, lo ataca
+/*void atacarEnemigo() {  //si el enemigo esta cerca, lo ataca
 
   if (distCen < minDistancia) {
     estadoMotores = ADELANTE;
   } else if (distDer < minDistancia) {
     estadoMotores = DERECHA;
-  } else if (distIzq < minDistancia) {
+  } else if (distIzq_ < minDistancia) {
     estadoMotores = IZQUIERDA;
   }
-}
+}*/
 
 int senCNY(int a) {
   int valorSenCNY = analogRead(a);
@@ -334,14 +338,13 @@ void setup() {
   pinMode(motorIZQ_1, OUTPUT);
   pinMode(motorIZQ_2, OUTPUT);
 
-  pinMode(D2, OUTPUT);
 
   //botones
 
   pinMode(swInicio, INPUT_PULLUP);
 
 
-  Serial.begin(9600);
+ // Serial.begin(9600);
 }
 
 void loop() {
