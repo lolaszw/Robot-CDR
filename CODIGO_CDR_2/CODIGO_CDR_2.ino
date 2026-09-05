@@ -16,7 +16,7 @@ enum movMotores { ADELANTE,
                   DETENIDO };
 movMotores estadoMotores = DETENIDO;
 
-enum estrategiasIni { INIT ,    //init
+enum estrategiasIni { INIT,    //init
                       G_IZQ,   //giro izq
                       G_IZQ2,  //giro izq
                       G_DER,   //giro der
@@ -26,9 +26,9 @@ estrategiasIni estrategiaIniActual = 0;
 
 enum estrategiasAta { INIT_A,    //init
                       G_IZQ_A,   //giro izq
-                      G_IZQ2_A ,  //giro izq
-                      G_DER_A ,   //giro der
-                      G_DER2_A   //giro Der
+                      G_IZQ2_A,  //giro izq, sin arco
+                      G_DER_A,   //giro der
+                      G_DER2_A   //giro Der, sin arco
 };
 estrategiasAta estrategiaAtaActual = 0;
 //----------------------------------------------------------------------------------------------------------------------
@@ -55,25 +55,27 @@ estrategiasAta estrategiaAtaActual = 0;
 
 //CNYs
 #define cnyDer A6
-#define cnyIzq A7
+#define cnyIzq A7 //INVERTIDO
 
 //----------------------------------------------------------------------------------------------------------------------
 //motores
 #define motorDER_1 5
 #define motorDER_2 6
-#define motorIZQ_1 7
-#define motorIZQ_2 8
+#define motorIZQ_1 8
+#define motorIZQ_2 7
 
 //pwm
 #define pwmDer 3
 #define pwmIzq 9
 //----------------------------------------------------------------------------------------------------------------------
 //parametros
-const int minDistancia = 150;
+const int minDistancia = 70;
 const int esperaInicio = 5000;
 unsigned long ti = 0;
 const int buscaEspera = 3000;
-const int umbralCNY = 400;
+const int umbralCNY_der = 900;
+const int umbralCNY_izq = 500;
+
 const int velMaxIzq = 255;
 const int velMaxDer = 255;
 //variables
@@ -148,7 +150,7 @@ void estrategiaIniAnalizada() {
       }
     case G_IZQ:
       {
-        estadoMotores = IZQUIERDA; //gira 90 a la izq
+        estadoMotores = IZQUIERDA;  //gira 90 a la izq
         if (intervalo(ti, 170)) {
           estadoActual = COMBATE;
           ti = millis();
@@ -157,16 +159,16 @@ void estrategiaIniAnalizada() {
       }  //g izq
     case G_IZQ2:
       {
-        estadoMotores = IZQUIERDA; //gira 90 a la izq 
+        estadoMotores = IZQUIERDA;  //gira 90 a la izq
         if (intervalo(ti, 170)) {
           estadoActual = COMBATE;
           ti = millis();
         }
         break;
-      }  
+      }
     case G_DER:
       {
-        estadoMotores = DERECHA; //gira 90 a la derecha
+        estadoMotores = DERECHA;  //gira 90 a la derecha
         if (intervalo(ti, 170)) {
           estadoActual = COMBATE;
           ti = millis();
@@ -175,7 +177,7 @@ void estrategiaIniAnalizada() {
       }  //g izq
     case G_DER2:
       {
-        estadoMotores = DERECHA; //gira 90 a la derecha
+        estadoMotores = DERECHA;  //gira 90 a la derecha
         if (intervalo(ti, 170)) {
           estadoActual = COMBATE;
           ti = millis();
@@ -193,46 +195,62 @@ void estrategiaAtaque() {
       }
     case G_IZQ_A:
       {
-        if (distCen < minDistancia) { //si sensa adelante, se acerca y dsp gira
+        if (distCen < minDistancia) {  //si sensa adelante, se acerca y dsp gira
           estadoMotores = ADELANTE;
-          millis();
+          ti = millis();
           if (intervalo(ti, 400)) {
-            estadoMotores = IZQUIERDA; //hace un arco a la izquierda
-            motores(180, 255);
+            estadoMotores = IZQUIERDA;  //hace un arco a la izquierda
+            motores(180, 255);          //lo tengo que hacer con PID --> prox competencia
           }
         }
         break;
       }
     case G_IZQ2_A:
       {
-        if (distCen < minDistancia) {
-
+        static bool girandoDer = false;
+        static bool girandoIzq = false;
+        if (distCen < minDistancia) {  //si esta de frente al robot, va hacia el
           estadoMotores = ADELANTE;
           motores(255, 255);
-        } else if (distDer_1 < minDistancia) {
-          estadoMotores = DERECHA;
-          millis();
-          if(intervalo(ti, 170)){
-           estadoMotores = DERECHA;
-            motores(255, 180); 
+          girandoDer = false;
+          girandoIzq = false;
+        } else if (distDer_1 < minDistancia) {  //si el robot esta de costado, se possiciona para enfrentarlo
+          if (!girandoDer) {
+            ti = millis();
+            girandoDer = true;
           }
-        } else if (distIzq_1 < minDistancia) {
+          estadoMotores = DERECHA;
+          if (intervalo(ti, 170)) {
+            estadoMotores = DERECHA;
+            motores(255, 180);  //gira 90 a la derecha
+            girandoDer = false;
+          }
+        } else if (distIzq_1 < minDistancia) {  //si el robot esta de costado, se possiciona para enfrentarlo
+          if (!girandoIzq) {
+            ti = millis();
+            girandoIzq = true;
+          }
           estadoMotores = IZQUIERDA;
-          millis();
           if (intervalo(ti, 170)) {
             estadoMotores = IZQUIERDA;
             motores(180, 255);
+            girandoIzq = false;
           }
+        } else {
+          estadoMotores = ADELANTE;
+          motores(100, 100);
+          girandoDer = false;
+          girandoIzq = false;
         }
         break;
       }
     case G_DER_A:
       {
-        if (distCen < minDistancia) { //si sensa va para adelante 
+        if (distCen < minDistancia) {  //si sensa va para adelante
           estadoMotores = ADELANTE;
-          millis();
-          if (intervalo(ti, 400)) { //y dsp de un tiempo hace un arco (querria implementar que gire para donde vuelve a sensar)
-            estadoMotores = IZQUIERDA;//lo tengo que hacer con PID --> prox competencia
+          ti = millis();
+          if (intervalo(ti, 400)) {   //y dsp de un tiempo hace un arco (querria implementar que gire para donde vuelve a sensar)
+            estadoMotores = DERECHA;  //lo tengo que hacer con PID --> prox competencia
             motores(180, 255);
           }
         }
@@ -240,23 +258,40 @@ void estrategiaAtaque() {
       }
     case G_DER2_A:
       {
-        if (distCen < minDistancia) { //cuando sensa, va a max velocidad
+        static bool girandoDer = false;
+        static bool girandoIzq = false;
+        if (distCen < minDistancia) {  //cuando sensa, va a max velocidad
           estadoMotores = ADELANTE;
           motores(255, 255);
-        } else if (distDer_1 < minDistancia) { //si sensa un costado, gira 90° y hace un arco a la derecha 
+          girandoDer = false;
+          girandoIzq = false;
+        } else if (distDer_1 < minDistancia) {  //si sensa un costado, gira 90° y hace un arco a la derecha
+          if (!girandoDer) {
+            ti = millis();
+            girandoDer = true;
+          }
           estadoMotores = DERECHA;
-          millis();
-          if(intervalo(ti, 170)){ 
-           estadoMotores = DERECHA;
-            motores(255, 180); 
-          }
-        } else if (distIzq_1 < minDistancia) { //si sensa un costado, gira 90° y hace un arco a la izquierda 
-          estadoMotores = IZQUIERDA;
-          millis();
           if (intervalo(ti, 170)) {
-            estadoMotores = IZQUIERDA; 
-            motores(180, 255);
+            estadoMotores = DERECHA;
+            motores(255, 180);
+            girandoDer = false;
           }
+        } else if (distIzq_1 < minDistancia) {  //si sensa un costado, gira 90° y hace un arco a la izquierda
+          if (!girandoIzq) {
+            ti = millis();
+            girandoIzq = true;
+          }
+          estadoMotores = IZQUIERDA;
+          if (intervalo(ti, 170)) {
+            estadoMotores = IZQUIERDA;
+            motores(180, 255);
+            girandoIzq = false;
+          }
+        } else {
+          estadoMotores = ADELANTE;
+          motores(180, 180);
+          girandoDer = false;
+          girandoIzq = false;
         }
         break;
       }
@@ -270,7 +305,7 @@ void pasarPWMAMotores(int valorPWMIzq, int valorPWMDer) {
     digitalWrite(motorIZQ_2, HIGH);
     analogWrite(pwmIzq, valorPWMIzq);
   } else {
-    digitalWrite(motorIZQ_1, HIGH);
+    digitalWrite(motorIZQ_1, HIGH);  //ESTAN INVERTIDOS
     digitalWrite(motorIZQ_2, LOW);
     analogWrite(pwmIzq, -valorPWMIzq);
   }
@@ -332,6 +367,12 @@ void setup() {
   pinMode(ECHO_3, INPUT);
   pinMode(TRIG_3, OUTPUT);
 
+  pinMode(ECHO_4, INPUT);
+  pinMode(TRIG_4, OUTPUT);
+
+  pinMode(ECHO_5, INPUT);
+  pinMode(TRIG_5, OUTPUT);
+
   //motores
   pinMode(motorDER_1, OUTPUT);
   pinMode(motorDER_2, OUTPUT);
@@ -344,7 +385,7 @@ void setup() {
   pinMode(swInicio, INPUT_PULLUP);
 
 
- // Serial.begin(9600);
+  // Serial.begin(9600);
 }
 
 void loop() {
@@ -356,31 +397,21 @@ void loop() {
 
         if (digitalRead(swInicio) == LOW) {  //si se presiona el boton empieza a esperar
           ti = millis();
-          estadoActual = ANALIZAR;
+          estadoActual = ESPERA;
           int leerDip = 0;
-          for(byte i = 0; i < 8; i++)
-          {
+          for (byte i = 0; i < 8; i++) {  //
             leerDip += analogRead(DIP);
           }
           leerDip = leerDip / 8;
-          if(leerDip <= 20)
-          {
+          if (leerDip <= 20) {
             dipAnalizado = 0;
-          }
-          else if(abs(leerDip - 180) <= 20)
-          {
+          } else if (abs(leerDip - 180) <= 20) {
             dipAnalizado = 1;
-          }
-          else if(abs(leerDip - 306) <= 20)
-          {
+          } else if (abs(leerDip - 306) <= 20) {
             dipAnalizado = 2;
-          }
-          else if(abs(leerDip - 400) <= 20)
-          {
+          } else if (abs(leerDip - 400) <= 20) {
             dipAnalizado = 3;
-          }
-          else if(abs(leerDip - 471) <= 20)
-          {
+          } else if (abs(leerDip - 471) <= 20) {
             dipAnalizado = 4;
           }
         }
@@ -402,22 +433,26 @@ void loop() {
       }
     case COMBATE:
       {
-        if (senCNY(cnyDer) > umbralCNY && senCNY(cnyIzq) > umbralCNY) {  //si el piso lee negro pasa a ver si hay enemigos
-          distDer_1 = medirDistancia(ECHO_1, TRIG_1);
-          distDer_2 = medirDistancia(ECHO_4, TRIG_4);
-          distCen = medirDistancia(ECHO_2, TRIG_2);
-          distIzq_1 = medirDistancia(ECHO_3, TRIG_3);
-          distIzq_2 = medirDistancia(ECHO_3, TRIG_3);
+        if (senCNY(cnyDer) > umbralCNY_der && senCNY(cnyIzq) < umbralCNY_izq) {  //si el piso lee negro pasa a ver si hay enemigos
+          distDer_1 = medirDistancia(ECHO_5, TRIG_4);
+
+          distDer_2 = medirDistancia(ECHO_3, TRIG_3);  //NO SE USA
+
+          distCen = medirDistancia(ECHO_4, TRIG_4);
+
+          distIzq_1 = medirDistancia(ECHO_2, TRIG_2);
+
+          distIzq_2 = medirDistancia(ECHO_1, TRIG_1);  //NO SE USA
 
           estrategiaAtaque();
-        } else if (senCNY(cnyDer) > umbralCNY && senCNY(cnyIzq) < umbralCNY) {  //si el lado izquierdo ve blanco, gira
+        } else if (senCNY(cnyDer) > umbralCNY_der && senCNY(cnyIzq) > umbralCNY_izq) {  //si el lado izquierdo ve blanco, gira
           estadoMotores = ATRAS;
-          
+
 
           if (intervalo(ti, 2000)) {
             estadoMotores = IZQUIERDA;
           }
-        } else if (senCNY(cnyDer) < umbralCNY && senCNY(cnyIzq) > umbralCNY) {  //si el lado derecho ve blanco, gira
+        } else if (senCNY(cnyDer) < umbralCNY_der && senCNY(cnyIzq) < umbralCNY_izq) {  //si el lado derecho ve blanco, gira
           estadoMotores = ATRAS;
           if (intervalo(ti, 2000)) {
             estadoMotores = DERECHA;
