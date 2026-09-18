@@ -38,20 +38,20 @@ estrategiasAta estrategiaAtaActual = 0;
 
 //----------------------------------------------------------------------------------------------------------------------
 //ultraSonicos:
-#define ECHO_1 4
-#define TRIG_1 2
+//#define ECHO_1 4
+//#define TRIG_1 2
 
-#define ECHO_2 A5
-#define TRIG_2 A4
+#define ECHO_2 A5 //se usa
+#define TRIG_2 A4 //se usa
 
-#define ECHO_3 12
-#define TRIG_3 11
+//#define ECHO_3 12
+//#define TRIG_3 11
 
-#define ECHO_4 A3
-#define TRIG_4 A1
+#define ECHO_4 A3 //se usa
+#define TRIG_4 A1 
 
-#define ECHO_5 A2
-#define TRIG_5 13
+#define ECHO_5 A2  //se usa
+//#define TRIG_5 13
 
 //CNYs
 #define cnyDer A6
@@ -61,8 +61,8 @@ estrategiasAta estrategiaAtaActual = 0;
 //motores
 #define motorDER_1 5
 #define motorDER_2 6
-#define motorIZQ_1 8
-#define motorIZQ_2 7
+#define motorIZQ_1 7
+#define motorIZQ_2 8
 
 //pwm
 #define pwmDer 3
@@ -73,8 +73,8 @@ const int minDistancia = 70;
 const int esperaInicio = 5000;
 unsigned long ti = 0;
 const int buscaEspera = 3000;
-const int umbralCNY_der = 900;
-const int umbralCNY_izq = 500;
+const int umbralCNY_der = 500;
+const int umbralCNY_izq = 5;
 
 const int velMaxIzq = 255;
 const int velMaxDer = 255;
@@ -289,7 +289,7 @@ void estrategiaAtaque() {
           }
         } else {
           estadoMotores = ADELANTE;
-          motores(180, 180);
+          motores(100, 100);
           girandoDer = false;
           girandoIzq = false;
         }
@@ -358,20 +358,20 @@ bool intervalo(long tiempoi, int t) {  //para ver si x intervalo se cumplio o no
 
 void setup() {
   //ultraSonicos
-  pinMode(ECHO_1, INPUT);
-  pinMode(TRIG_1, OUTPUT);
+  //pinMode(ECHO_1, INPUT);
+  //pinMode(TRIG_1, OUTPUT);
 
   pinMode(ECHO_2, INPUT);
   pinMode(TRIG_2, OUTPUT);
 
-  pinMode(ECHO_3, INPUT);
-  pinMode(TRIG_3, OUTPUT);
+  //pinMode(ECHO_3, INPUT);
+  //pinMode(TRIG_3, OUTPUT);
 
   pinMode(ECHO_4, INPUT);
   pinMode(TRIG_4, OUTPUT);
 
   pinMode(ECHO_5, INPUT);
-  pinMode(TRIG_5, OUTPUT);
+  //pinMode(TRIG_5, OUTPUT);
 
   //motores
   pinMode(motorDER_1, OUTPUT);
@@ -433,19 +433,19 @@ void loop() {
       }
     case COMBATE:
       {
-        if (senCNY(cnyDer) > umbralCNY_der && senCNY(cnyIzq) < umbralCNY_izq) {  //si el piso lee negro pasa a ver si hay enemigos
-          distDer_1 = medirDistancia(ECHO_5, TRIG_4);
+        if (senCNY(cnyDer) < umbralCNY_der && senCNY(cnyIzq) > umbralCNY_izq) {  //si el piso lee negro pasa a ver si hay enemigos
+          distDer_1 = medirDistancia(TRIG_5, ECHO_4);
 
-          distDer_2 = medirDistancia(ECHO_3, TRIG_3);  //NO SE USA
+          //distDer_2 = medirDistancia(ECHO_3, TRIG_3);  //NO SE USA
 
-          distCen = medirDistancia(ECHO_4, TRIG_4);
+          distCen = medirDistancia(TRIG_4, ECHO_4);
 
-          distIzq_1 = medirDistancia(ECHO_2, TRIG_2);
+          distIzq_1 = medirDistancia(TRIG_2, ECHO_2);
 
-          distIzq_2 = medirDistancia(ECHO_1, TRIG_1);  //NO SE USA
+          //distIzq_2 = medirDistancia(ECHO_1, TRIG_1);  //NO SE USA
 
           estrategiaAtaque();
-        } else if (senCNY(cnyDer) > umbralCNY_der && senCNY(cnyIzq) > umbralCNY_izq) {  //si el lado izquierdo ve blanco, gira
+        } /*else if (senCNY(cnyDer) > umbralCNY_der && senCNY(cnyIzq) > umbralCNY_izq) {  //si el lado izquierdo ve blanco, gira
           estadoMotores = ATRAS;
 
 
@@ -456,8 +456,8 @@ void loop() {
           estadoMotores = ATRAS;
           if (intervalo(ti, 2000)) {
             estadoMotores = DERECHA;
-          }
-        } else {  //si lee blanco completamente
+          } 
+        } */else {  //si lee blanco completamente
           estadoMotores = ATRAS;
         }
         break;
