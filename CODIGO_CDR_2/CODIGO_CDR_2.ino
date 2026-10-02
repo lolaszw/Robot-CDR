@@ -40,40 +40,41 @@ estrategiasAta estrategiaAtaActual = 0;
 //#define ECHO_1 4
 //#define TRIG_1 2
 
-#define ECHO_2 A5  //se usa
-#define TRIG_2 A4  //se usa
+#define ECHO_2 A4  //se usa derecha
+#define TRIG_2 A5  //se usa
 
-#define ECHO_3 12 //se usa
-#define TRIG_3 11
+#define ECHO_3 11  //se usa izq
+#define TRIG_3 12
 
-#define ECHO_4 A3  //se usa
-#define TRIG_4 A1
+#define ECHO_4 A2  //se usa centro
+#define TRIG_4 A1  //se usa
 
-//#define ECHO_5 A2  
+//#define ECHO_5 A2
 //#define TRIG_5 13
 
 //CNYs
-#define cnyDer A6
-#define cnyIzq A7  //INVERTIDO
+#define cnyDer A7
+#define cnyIzq A6
 
 //----------------------------------------------------------------------------------------------------------------------
 //motores
-#define motorDER_1 5
-#define motorDER_2 6
-#define motorIZQ_1 7
-#define motorIZQ_2 8
+#define motorIZQ_1 5
+#define motorIZQ_2 6
+
+#define motorDER_1 8
+#define motorDER_2 7
 
 //pwm
-#define pwmDer 3
-#define pwmIzq 9
+#define pwmDer 9
+#define pwmIzq 3
 //----------------------------------------------------------------------------------------------------------------------
 //parametros
 const int minDistancia = 70;
 const int esperaInicio = 5000;
 unsigned long ti = 0;
 const int buscaEspera = 3000;
-const int umbralCNY_der = 500;
-const int umbralCNY_izq = 5;
+const int umbralCNY_der = 600;
+const int umbralCNY_izq = 450;
 
 const int velMaxIzq = 255;
 const int velMaxDer = 255;
@@ -93,7 +94,7 @@ void motores(int pwm_der, int pwm_izq) {
   static int velocidadPWM_DER = 0;
   static int velocidadPWM_IZQ = 0;
   switch (estadoMotores) {
-    case ADELANTE:
+    case ATRAS:
       {
         Serial.println("va adelante");
         /*velocidadPWM_DER += 20;
@@ -103,7 +104,7 @@ void motores(int pwm_der, int pwm_izq) {
         pasarPWMAMotores(velocidadPWM_IZQ, velocidadPWM_DER);*/
         break;
       }
-    case ATRAS:
+    case ADELANTE:
       {
         Serial.println("va atras");
         /*velocidadPWM_DER -= 20;
@@ -116,7 +117,7 @@ void motores(int pwm_der, int pwm_izq) {
     case DERECHA:
       {
         Serial.println("va derecha");
-        /* velocidadPWM_DER -= 30;
+       /* velocidadPWM_DER -= 30;
         velocidadPWM_DER = constrain(velocidadPWM_DER, -pwm_der, pwm_der);
         velocidadPWM_IZQ += 10;
         velocidadPWM_IZQ = constrain(velocidadPWM_IZQ, -pwm_izq, pwm_izq);
@@ -126,11 +127,11 @@ void motores(int pwm_der, int pwm_izq) {
     case IZQUIERDA:
       {
         Serial.println("va izquierda");
-        /*velocidadPWM_DER += 10;
+       /* velocidadPWM_DER += 10;
         velocidadPWM_DER = constrain(velocidadPWM_DER, -pwm_der, pwm_der);
         velocidadPWM_IZQ -= 30;
         velocidadPWM_IZQ = constrain(velocidadPWM_IZQ, -pwm_izq, pwm_izq);
-        pasarPWMAMotores(velocidadPWM_IZQ, velocidadPWM_DER); */
+        pasarPWMAMotores(velocidadPWM_IZQ, velocidadPWM_DER);*/
         break;
       }
     case DETENIDO:
@@ -218,7 +219,9 @@ void estrategiaAtaque() {
           motores(255, 255);
           girandoDer = false;
           girandoIzq = false;
+          Serial.println("lee adelante");
         } else if (distDer_1 < minDistancia) {  //si el robot esta de costado, se possiciona para enfrentarlo
+          Serial.println("lee derecha");
           if (!girandoDer) {
             ti = millis();
             girandoDer = true;
@@ -230,6 +233,7 @@ void estrategiaAtaque() {
             girandoDer = false;
           }
         } else if (distIzq_1 < minDistancia) {  //si el robot esta de costado, se possiciona para enfrentarlo
+          Serial.println("lee izquierda");
           if (!girandoIzq) {
             ti = millis();
             girandoIzq = true;
@@ -433,33 +437,19 @@ void loop() {
       }
     case COMBATE:
       {
-        if (lectCNY_der < umbralCNY_der && lectCNY_izq > umbralCNY_izq) {  //si el piso lee negro pasa a ver si hay enemigos
-          distDer_1 = medirDistancia(TRIG_3, ECHO_3);
-
+        if (lectCNY_der < umbralCNY_der && lectCNY_izq < umbralCNY_izq) {  //si el piso lee negro pasa a ver si hay enemigos
+          distDer_1 = medirDistancia(TRIG_2, ECHO_2);
           //distDer_2 = medirDistancia(ECHO_3, TRIG_3);  //NO SE USA
-
-          distCen = medirDistancia(TRIG_2, ECHO_2);
-
-          distIzq_1 = medirDistancia(TRIG_4, ECHO_4);
-
-          Serial.println("Leyendo negro cny");
+          distCen = medirDistancia(TRIG_4, ECHO_4);
+          distIzq_1 = medirDistancia(TRIG_3, ECHO_3);
+          //Serial.println("Leyendo negro cny");
           //distIzq_2 = medirDistancia(ECHO_1, TRIG_1);  //NO SE USA
-
           estrategiaAtaque();
-        }       /*else if (lectCNY_der > umbralCNY_der && lectCNY_izq > umbralCNY_izq) {  //si el lado izquierdo ve blanco, gira
-          estadoMotores = ATRAS;
+          //Serial.print("C:"); Serial.println(distCen);
+          //Serial.print(" D:"); Serial.println(distDer_1);
+          //Serial.print(" I:"); Serial.println(distIzq_1);
 
-
-          if (intervalo(ti, 2000)) {
-            estadoMotores = IZQUIERDA;
-          }
-        } else if (lectCNY_der < umbralCNY_der && lectCNY_izq < umbralCNY_izq) {  //si el lado derecho ve blanco, gira
-          estadoMotores = ATRAS;
-          if (intervalo(ti, 2000)) {
-            estadoMotores = DERECHA;
-          } 
-        } */
-        else {  //si lee blanco completamente
+        } else {  //si lee blanco completamente
           estadoMotores = ATRAS;
           motores(200, 200);
           Serial.println("leyendo blanco cny");
