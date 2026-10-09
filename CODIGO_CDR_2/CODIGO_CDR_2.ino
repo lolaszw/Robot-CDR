@@ -73,8 +73,8 @@ const int minDistancia = 70;
 const int esperaInicio = 5000;
 unsigned long ti = 0;
 const int buscaEspera = 3000;
-const int umbralCNY_der = 600;
-const int umbralCNY_izq = 450;
+const int umbralCNY_der = 500;
+const int umbralCNY_izq =  1;
 
 const int velMaxIzq = 255;
 const int velMaxDer = 255;
@@ -94,44 +94,44 @@ void motores(int pwm_der, int pwm_izq) {
   static int velocidadPWM_DER = 0;
   static int velocidadPWM_IZQ = 0;
   switch (estadoMotores) {
-    case ATRAS:
+    case ADELANTE:
       {
         Serial.println("va adelante");
-        /*velocidadPWM_DER += 20;
+        velocidadPWM_DER += 20;
         velocidadPWM_DER = constrain(velocidadPWM_DER, -pwm_der, pwm_der);
         velocidadPWM_IZQ += 20;
         velocidadPWM_IZQ = constrain(velocidadPWM_IZQ, -pwm_izq, pwm_izq);
-        pasarPWMAMotores(velocidadPWM_IZQ, velocidadPWM_DER);*/
+        pasarPWMAMotores(velocidadPWM_IZQ, velocidadPWM_DER);
         break;
       }
-    case ADELANTE:
+    case ATRAS:
       {
         Serial.println("va atras");
-        /*velocidadPWM_DER -= 20;
+        velocidadPWM_DER -= 20;
         velocidadPWM_DER = constrain(velocidadPWM_DER, -pwm_der, pwm_der);
         velocidadPWM_IZQ -= 20;
         velocidadPWM_IZQ = constrain(velocidadPWM_IZQ, -pwm_izq, pwm_izq);
-        pasarPWMAMotores(velocidadPWM_IZQ, velocidadPWM_DER);*/
+        pasarPWMAMotores(velocidadPWM_IZQ, velocidadPWM_DER);
         break;
       }
     case DERECHA:
       {
         Serial.println("va derecha");
-       /* velocidadPWM_DER -= 30;
+       velocidadPWM_DER -= 30;
         velocidadPWM_DER = constrain(velocidadPWM_DER, -pwm_der, pwm_der);
         velocidadPWM_IZQ += 10;
         velocidadPWM_IZQ = constrain(velocidadPWM_IZQ, -pwm_izq, pwm_izq);
-        pasarPWMAMotores(velocidadPWM_IZQ, velocidadPWM_DER);*/
+        pasarPWMAMotores(velocidadPWM_IZQ, velocidadPWM_DER);
         break;
       }
     case IZQUIERDA:
       {
         Serial.println("va izquierda");
-       /* velocidadPWM_DER += 10;
+        velocidadPWM_DER += 10;
         velocidadPWM_DER = constrain(velocidadPWM_DER, -pwm_der, pwm_der);
         velocidadPWM_IZQ -= 30;
         velocidadPWM_IZQ = constrain(velocidadPWM_IZQ, -pwm_izq, pwm_izq);
-        pasarPWMAMotores(velocidadPWM_IZQ, velocidadPWM_DER);*/
+        pasarPWMAMotores(velocidadPWM_IZQ, velocidadPWM_DER);
         break;
       }
     case DETENIDO:
@@ -245,7 +245,7 @@ void estrategiaAtaque() {
             girandoIzq = false;
           }
         } else {
-          estadoMotores = ADELANTE;
+          estadoMotores = IZQUIERDA;
           motores(100, 100);
           girandoDer = false;
           girandoIzq = false;
@@ -451,7 +451,7 @@ void loop() {
 
         } else {  //si lee blanco completamente
           estadoMotores = ATRAS;
-          motores(200, 200);
+          motores(150, 150);
           Serial.println("leyendo blanco cny");
         }
         break;
