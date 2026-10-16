@@ -69,7 +69,7 @@ const int esperaInicio = 5000;
 unsigned long ti = 0;
 const int buscaEspera = 3000;
 const int umbralCNY_der = 600;
-const int umbralCNY_izq = 450;
+const int umbralCNY_izq = 600;
 
 const int velMaxIzq = 255;
 const int velMaxDer = 255;
@@ -213,7 +213,7 @@ void estrategiaAtaque() {
           girandoDer = false;
           girandoIzq = false;
           //Serial.println("lee adelante");
-        } else if (distDer_1 < minDistancia) {  //si el robot esta de costado, se possiciona para enfrentarlo
+        } else if (distDer < minDistancia) {  //si el robot esta de costado, se possiciona para enfrentarlo
           //Serial.println("lee derecha");
           if (!girandoDer) {
             ti = millis();
@@ -225,7 +225,7 @@ void estrategiaAtaque() {
             motores(255, 180);  //gira 90 a la derecha
             girandoDer = false;
           }
-        } else if (distIzq_1 < minDistancia) {  //si el robot esta de costado, se possiciona para enfrentarlo
+        } else if (distIzq < minDistancia) {  //si el robot esta de costado, se possiciona para enfrentarlo
           //Serial.println("lee izquierda");
           if (!girandoIzq) {
             ti = millis();
@@ -266,7 +266,7 @@ void estrategiaAtaque() {
           motores(255, 255);
           girandoDer = false;
           girandoIzq = false;
-        } else if (distDer_1 < minDistancia) {  //si sensa un costado, gira 90° y hace un arco a la derecha
+        } else if (distDer < minDistancia) {  //si sensa un costado, gira 90° y hace un arco a la derecha
           if (!girandoDer) {
             ti = millis();
             girandoDer = true;
@@ -277,7 +277,7 @@ void estrategiaAtaque() {
             motores(255, 180);
             girandoDer = false;
           }
-        } else if (distIzq_1 < minDistancia) {  //si sensa un costado, gira 90° y hace un arco a la izquierda
+        } else if (distIzq < minDistancia) {  //si sensa un costado, gira 90° y hace un arco a la izquierda
           if (!girandoIzq) {
             ti = millis();
             girandoIzq = true;
@@ -427,9 +427,9 @@ void loop() {
     case COMBATE:
       {
         if (lectCNY_der < umbralCNY_der && lectCNY_izq < umbralCNY_izq) {  //si el piso lee negro pasa a ver si hay enemigos
-          distDer_1 = medirDistancia(TRIG_2, ECHO_2);
+          distDer = medirDistancia(TRIG_2, ECHO_2);
           distCen = medirDistancia(TRIG_4, ECHO_4);
-          distIzq_1 = medirDistancia(TRIG_3, ECHO_3);
+          distIzq = medirDistancia(TRIG_3, ECHO_3);
           //Serial.println("Leyendo negro cny");
           estrategiaAtaque();
 
